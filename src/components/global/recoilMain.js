@@ -81,16 +81,13 @@ export const cartItems = atom({
     default: [],
 });
 
-let auth
-if (localStorage.getItem('authToken') === null) {
-    auth = null
-} else {
-    auth = JSON.parse(localStorage.getItem('authToken'))
-}
-
-export const authAtom = atom({
-    key: 'authAtom',
-    default: auth,
+export const loadingTitle = atom({
+    key: 'loadingTitle',
+    default: '',
+})
+export const loadingOpen = atom({
+    key: 'loadingOpen',
+    default: false,
 })
 
 export const loadingMessageStackAtom = atom({

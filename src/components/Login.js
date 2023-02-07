@@ -8,9 +8,11 @@ import {
     accessExpiryAtom,
     userIdAtom,
     loggedInUserAtom, themeMode,
+    loadingTitle,
+    loadingOpen
 } from './global/recoilMain';
 import {getDataString, getDataInt, deleteData} from './helpers/storage';
-import {useRecoilState, useRecoilValue, useSetRecoilState} from 'recoil';
+import {useRecoilState, useSetRecoilState} from 'recoil';
 import {login, refreshLogin} from './helpers/api';
 import {timeToLogout} from './helpers/misc';
 import Box from '@mui/material/Box';
@@ -34,6 +36,8 @@ const Login = () => {
     const [usernameValue, setUsernameValue] = useState('');
     const [passwordValue, setPasswordValue] = useState('');
     const [loadingMessage, setLoadingMessage] = useRecoilState(loadingMessageSelector);
+    const setLoadingTitle = useSetRecoilState(loadingTitle);
+    const setOpenLoad = useSetRecoilState(loadingOpen);
     const [accessToken, setAccessToken] = useRecoilState(accessTokenAtom);
     const setUserId = useSetRecoilState(userIdAtom);
     const setRefreshToken = useSetRecoilState(refreshTokenAtom);
@@ -79,6 +83,8 @@ const Login = () => {
             const refresh = async () => {
                 try {
                     setLoadingMessage('Initializing');
+                    setOpenLoad(true)
+                    setLoadingTitle('Initializing')
                     const authData = await refreshLogin(userIdLocal, refreshTokenLocal);
                     if (!authData || !authData.userId || !authData.accessToken || !authData.refreshToken ||
                         !authData.accessExpiry || !authData.refreshExpiry || !authData.user) {
@@ -98,6 +104,7 @@ const Login = () => {
                     setLoggedInUser(authData.user);
                 } finally {
                     setLoadingMessage(null);
+                    setOpenLoad(false)
                 }
             };
             refresh();
@@ -191,6 +198,8 @@ const Login = () => {
         setLoginError(false);
         try {
             setLoadingMessage('Authenticating');
+            setOpenLoad(true)
+            setLoadingTitle('Authenticating')
             const authData = await login(usernameValue, passwordValue);
             if (!authData || !authData.userId || !authData.accessToken || !authData.refreshToken || !authData.accessExpiry ||
                 !authData.refreshExpiry || !authData.user) {
@@ -210,6 +219,7 @@ const Login = () => {
             console.error('login error ->', e);
         } finally {
             setLoadingMessage(null);
+            setOpenLoad(false)
         }
     };
 
@@ -227,6 +237,7 @@ const Login = () => {
                 <Stack spacing={2}>
                     <TextField
                         type="text"
+                        error={loginError}
                         fullWidth
                         label="Username"
                         size='small'
@@ -236,6 +247,7 @@ const Login = () => {
                     />
                     <TextField
                         fullWidth
+                        error={loginError}
                         type={showPassword ? 'text' : 'password'}
                         label="Password"
                         size='small'
@@ -309,23 +321,10 @@ const styles = {
         alignItems: 'stretch',
         justifyContent: 'flex-start',
     },
-    redBorder: {
-        borderStyle: 'solid',
-        borderWidth: 1,
-    },
-    textInput: {
-        marginBottom: 15,
-    },
-    button: {
-        fontWeight: 'bold',
-        backgroundColor: '#EE7501',
-        borderColor: '#EE7501'
-    },
     lightBulb: {
         position: 'absolute',
         top: '15px',
         right: '20px',
-        cursor: 'pointer',
     }
 };
 

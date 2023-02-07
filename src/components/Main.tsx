@@ -15,7 +15,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AddCatalogItem from '../components/modals/AddCatalogItem'
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, {AlertProps} from '@mui/material/Alert';
-import {snackBarOpen, snackBarText, snackBarSeverity, cartItems, authAtom} from "./global/recoilMain";
+import {snackBarOpen, snackBarText, snackBarSeverity, cartItems} from "./global/recoilMain";
 import {useRecoilState} from "recoil";
 import FilterDrawer from "../components/modals/FilterDrawer";
 import EditCatalogItem from "../components/modals/EditCatalogItem";
@@ -29,7 +29,6 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
-import Login from '../components/Login'
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -48,7 +47,6 @@ if (localStorage.getItem('themeMode') !== null) {
 }
 
 function Main() {
-    const [auth, setAuth] = useRecoilState(authAtom)
     const [mode, setMode] = React.useState(defaultTheme);
     const [cart, setCart] = useRecoilState(cartItems)
     const [snackSev, setSnackSev] = useRecoilState(snackBarSeverity);
@@ -94,9 +92,7 @@ function Main() {
         //LOAD FRESH DATA
     }, [])
 
-    if(auth === null) {
-        return <Login/>
-    } else {return (
+    return (
         <ThemeProvider theme={theme}>
             <Box>
                 <CssBaseline />
@@ -215,6 +211,6 @@ function Main() {
             <AreYouSure/>
         </ThemeProvider>
     );
-    }}
+    }
 
 export default Main;
