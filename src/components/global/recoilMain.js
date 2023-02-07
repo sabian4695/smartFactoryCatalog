@@ -1,4 +1,20 @@
-import {atom} from "recoil";
+import {atom, selector} from "recoil";
+import {loggingEffect, saveToStorageEffect, updateLastActivityEffect} from '../helpers/misc'
+import cloneDeep from 'lodash.clonedeep';
+
+let defaultTheme
+if (localStorage.getItem('themeMode') !== null) {
+    let def = localStorage.getItem('themeMode')
+    defaultTheme = def === null ? 'light' : def
+} else {
+    defaultTheme = 'light'
+    localStorage.setItem('themeMode','light')
+}
+
+export const themeMode = atom({
+    key: "themeMode",
+    default: defaultTheme,
+});
 
 export const categoryOpen = atom({
     key: "categoryOpen",
@@ -63,4 +79,97 @@ export const areYouSureAccept = atom({
 export const cartItems = atom({
     key: "cartItems",
     default: [],
+});
+
+let auth
+if (localStorage.getItem('authToken') === null) {
+    auth = null
+} else {
+    auth = JSON.parse(localStorage.getItem('authToken'))
+}
+
+export const authAtom = atom({
+    key: 'authAtom',
+    default: auth,
+})
+
+export const loadingMessageStackAtom = atom({
+    key: 'loadingMessageStack',
+    default: [],
+    effects_UNSTABLE: [loggingEffect('loadingMessageStack')],
+});
+
+export const loadingMessageSelector = selector({
+    key: 'loadingMessage',
+    get: ({get}) => {
+        const messageStack = get(loadingMessageStackAtom);
+        return messageStack.length ? messageStack[0] : null;
+    },
+    set: ({get, set}, newValue) => {
+        const messageStack = cloneDeep(get(loadingMessageStackAtom));
+        if (newValue != null) messageStack.push(newValue);
+        else messageStack.shift();
+        set(loadingMessageStackAtom, messageStack);
+    },
+});
+
+export const accessTokenAtom = atom({
+    key: 'accessToken',
+    default: null,
+    effects_UNSTABLE: [
+        loggingEffect('accessToken'),
+        saveToStorageEffect('accessToken'),
+    ],
+});
+
+export const refreshTokenAtom = atom({
+    key: 'refreshToken',
+    default: null,
+    effects_UNSTABLE: [
+        loggingEffect('refreshToken'),
+        saveToStorageEffect('refreshToken'),
+    ],
+});
+
+export const refreshExpiryAtom = atom({
+    key: 'refreshExpiry',
+    default: null,
+    effects_UNSTABLE: [
+        loggingEffect('refreshExpiry'),
+        saveToStorageEffect('refreshExpiry'),
+    ],
+});
+
+export const accessExpiryAtom = atom({
+    key: 'accessExpiry',
+    default: null,
+    effects_UNSTABLE: [
+        loggingEffect('accessExpiry'),
+        saveToStorageEffect('accessExpiry'),
+    ],
+});
+
+export const userIdAtom = atom({
+    key: 'userId',
+    default: null,
+    effects_UNSTABLE: [
+        loggingEffect('userId'),
+        saveToStorageEffect('userId'),
+        updateLastActivityEffect(),
+    ],
+});
+
+export const loggedInUserAtom = atom({
+    key: 'loggedInUser',
+    default: null,
+    effects_UNSTABLE: [
+        loggingEffect('loggedInUser'),
+        saveToStorageEffect('loggedInUser'),
+    ],
+});
+
+export const lastActivityAtom = atom({
+    key: 'lastActivity',
+    default: null,
+    effects_UNSTABLE: [loggingEffect('lastActivity')],
 });

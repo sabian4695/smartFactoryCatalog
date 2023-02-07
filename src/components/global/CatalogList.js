@@ -292,7 +292,7 @@ const list = [
     }
 ]
 
-export const sfCatalogList = list.map(x => ({...x, key: uuidv4()}))
+export const sfCatalogList = list.map(x => ({...x, recordId: uuidv4()}))
 
 export const catalogListAtom = atom({
     key: "catalogListAtom",

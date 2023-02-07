@@ -33,7 +33,7 @@ export default function CatalogDetails() {
     const setEditOpen = useSetRecoilState(editCatagoryOpen)
     const itemID = useRecoilValue(categoryItem)
     const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
-    let currentItem = catalogList.find(x => x.key === itemID)
+    let currentItem = catalogList.find(x => x.recordId === itemID)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [itemDelete, setItemDelete] = React.useState(false)
     const moreOpen = Boolean(anchorEl);
@@ -72,7 +72,7 @@ export default function CatalogDetails() {
     }, [areYouSureOpen])
     async function handleDelete() {
         if (!itemDelete) {return}
-        let newArray = catalogList.filter(function(el) { return el.key !== itemID; });
+        let newArray = catalogList.filter(function(el) { return el.recordId !== itemID; });
         setCatalogList(newArray);
         setFiltered(newArray)
         setOpenModal(false)
@@ -116,7 +116,7 @@ export default function CatalogDetails() {
                             aria-expanded={moreOpen ? 'true' : undefined}
                             aria-haspopup="true"
                             onClick={handleClick}
-                            sx={{mr:0.5, ml:0}}
+                            sx={{mr:0.5, ml:-1}}
                         >
                             <MoreVertIcon/>
                         </IconButton>

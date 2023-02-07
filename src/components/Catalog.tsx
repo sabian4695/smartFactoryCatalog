@@ -25,9 +25,9 @@ export default function Catalog() {
                     </Tooltip>
                 </Grid>
             {filtered.map(x => (
-                <Grid xs='auto' key={x.key}>
+                <Grid xs='auto' key={x.recordId}>
                     <CatalogItem
-                        sfItemID={x.key}
+                        sfItemID={x.recordId}
                     />
                 </Grid>
             ))}

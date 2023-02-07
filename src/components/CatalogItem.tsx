@@ -20,7 +20,7 @@ import Icon from '@mui/material/Icon';
 
 export default function CatalogItem({sfItemID}: { sfItemID: any }) {
     const catalogList = useRecoilValue(catalogListAtom)
-    let currentItem = catalogList.find(x => x.key === sfItemID)
+    let currentItem = catalogList.find(x => x.recordId === sfItemID)
     const setOpenModal = useSetRecoilState(categoryOpen)
     const setItemDetails = useSetRecoilState(categoryItem)
     const [cart, setCart] = useRecoilState(cartItems)
@@ -105,10 +105,10 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                         <CardActions sx={{justifyContent:'space-between'}}>
                             <Button size="small" variant='outlined' onClick={openItem}>Learn More</Button>
                             {//@ts-ignore
-                                cart.find(x => x.id === currentItem.key) ?
+                                cart.find(x => x.id === currentItem.recordId) ?
                                     <Icon color='inherit'><DoneIcon/></Icon>
                                     :
-                                    <Tooltip title='Add to Cart'>
+                                    <Tooltip title='Add to Cart' arrow>
                                         <IconButton onClick={addToCart} size='small'>
                                             <AddShoppingCartIcon/>
                                         </IconButton>

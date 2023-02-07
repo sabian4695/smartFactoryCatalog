@@ -21,6 +21,7 @@ import DialogActions from '@mui/material/DialogActions';
 import Typography from "@mui/material/Typography";
 import {snackBarSeverity, snackBarText, snackBarOpen} from "../global/recoilMain";
 import {unitOptions, statusOptions, orgOptions, departmentOptions} from "../global/DropDowns";
+import Tooltip from '@mui/material/Tooltip';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -83,7 +84,7 @@ export default function AddCatalogItem() {
                 unitAdoption: units,
                 org: org,
                 department: dept,
-                key: uuidv4()
+                recordId: uuidv4()
             }
             setCatalogList((prevState: any) => [...prevState, newItem]);
             setFiltered(catalogList)
@@ -109,7 +110,18 @@ export default function AddCatalogItem() {
         setDept(departmentOptions[0])
         setErrorText('')
     }, [openModal])
-
+    function changeImage(event: any) {
+        const fileExtension = event.target.value.split(".").at(-1);
+        const allowedFileTypes = "jpg"
+        if (!allowedFileTypes.includes(fileExtension)) {
+            setSnackSev('error')
+            setSnackText('File must be a jpg')
+            setSnackOpen(true)
+            setErrorText('File must be a jpg')
+            return false;
+        }
+        setImage(event.target.value)
+    }
     return(
         <>
             <Dialog
@@ -156,16 +168,18 @@ export default function AddCatalogItem() {
                                 />
                             </Grid>
                             <Grid xs='auto' sx={{display: 'flex', flexGrow: '1'}}>
-                                <Button variant="contained" component="label" fullWidth color='secondary' disableElevation>
-                                    Upload Image
-                                    <input
-                                        value={image}
-                                        onChange={(event: any) => setImage(event.target.value)}
-                                        hidden
-                                        accept="image/*"
-                                        type="file"
-                                    />
-                                </Button>
+                                <Tooltip title='JPG files only' arrow>
+                                    <Button variant="contained" component="label" fullWidth color='secondary' disableElevation>
+                                        Upload Image
+                                        <input
+                                            value={image}
+                                            onChange={changeImage}
+                                            hidden
+                                            accept="image/*"
+                                            type="file"
+                                        />
+                                    </Button>
+                                </Tooltip>
                             </Grid>
                             <Grid xs={12}>
                                 <TextField

@@ -19,6 +19,7 @@ import {catalogListAtom, filteredCatalog} from "../global/CatalogList";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import SaveIcon from '@mui/icons-material/Save';
+import Tooltip from '@mui/material/Tooltip';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -27,7 +28,7 @@ export default function EditCatalogItem() {
     const [openModal, setOpenModal] = useRecoilState(editCatagoryOpen)
     const currentItem = useRecoilValue(categoryItem)
     const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
-    let currentItemDetails = catalogList.find(x => x.key === currentItem)
+    let currentItemDetails = catalogList.find(x => x.recordId === currentItem)
     const [longTitle, setLongTitle] = React.useState('')
     const [shortTitle, setShortTitle] = React.useState('')
     const [status, setStatus] = React.useState<string | null>(statusOptions[0]);
@@ -73,7 +74,7 @@ export default function EditCatalogItem() {
         setErrorText('')
         if(verifyInputs()) {
             let newArr = catalogList.map(obj => {
-                if (obj.key === currentItem) {
+                if (obj.recordId === currentItem) {
                     return {...obj,
                         longTitle: longTitle,
                         shortTitle: shortTitle,
@@ -99,7 +100,18 @@ export default function EditCatalogItem() {
             setSnackOpen(true)
         }
     }
-
+    function changeImage(event: any) {
+        const fileExtension = event.target.value.split(".").at(-1);
+        const allowedFileTypes = "jpg"
+        if (!allowedFileTypes.includes(fileExtension)) {
+            setSnackSev('error')
+            setSnackText('File must be a jpg')
+            setSnackOpen(true)
+            setErrorText('File must be a jpg')
+            return false;
+        }
+        setImage(event.target.value)
+    }
     React.useEffect(() => {
         if (!openModal) return;
         if (currentItemDetails) {
@@ -170,16 +182,18 @@ export default function EditCatalogItem() {
                                 />
                             </Grid>
                             <Grid xs='auto' sx={{display: 'flex', flexGrow: '1'}}>
-                                <Button variant="contained" component="label" fullWidth color='secondary' disableElevation>
-                                    Upload Image
-                                    <input
-                                        value={image}
-                                        onChange={(event: any) => setImage(event.target.value)}
-                                        hidden
-                                        accept="image/*"
-                                        type="file"
-                                    />
-                                </Button>
+                                <Tooltip title='JPG files only' arrow>
+                                    <Button variant="contained" component="label" fullWidth color='secondary' disableElevation>
+                                        Upload Image
+                                        <input
+                                            value={image}
+                                            onChange={changeImage}
+                                            hidden
+                                            accept="image/*"
+                                            type="file"
+                                        />
+                                    </Button>
+                                </Tooltip>
                             </Grid>
                             <Grid xs={12}>
                                 <TextField
