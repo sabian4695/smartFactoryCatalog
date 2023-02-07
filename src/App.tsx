@@ -15,12 +15,20 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AddCatalogItem from './components/modals/AddCatalogItem'
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, {AlertProps} from '@mui/material/Alert';
-import {snackBarOpen, snackBarText, snackBarSeverity} from "./components/global/recoilMain";
+import {snackBarOpen, snackBarText, snackBarSeverity, cartItems} from "./components/global/recoilMain";
 import {useRecoilValue, useRecoilState} from "recoil";
 import FilterDrawer from "./components/modals/FilterDrawer";
 import EditCatalogItem from "./components/modals/EditCatalogItem";
 import AreYouSure from "./components/modals/AreYouSure";
 import Tooltip from '@mui/material/Tooltip';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import Badge from '@mui/material/Badge';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Button from "@mui/material/Button";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -37,12 +45,29 @@ if (localStorage.getItem('themeMode') !== null) {
     defaultTheme = 'light'
     localStorage.setItem('themeMode','light')
 }
+const options = [
+    'None',
+    'Atria',
+    'Callisto',
+    'Dione',
+    'Ganymede',
+    'Hangouts Call',
+    'Luna',
+    'Oberon',
+    'Phobos',
+    'Pyxis',
+    'Sedna',
+    'Titania',
+    'Triton',
+    'Umbriel',
+];
 
 function App() {
     const [mode, setMode] = React.useState(defaultTheme);
-    const snackSev = useRecoilValue(snackBarSeverity);
+    const [cart, setCart] = useRecoilState(cartItems)
+    const [snackSev, setSnackSev] = useRecoilState(snackBarSeverity);
     const [snackOpen, setSnackOpen] = useRecoilState(snackBarOpen);
-    const snackText = useRecoilValue(snackBarText);
+    const [snackText, setSnackText] = useRecoilState(snackBarText);
     function setTheme() {
         if(mode === 'light') {
             setMode('dark')
@@ -68,6 +93,16 @@ function App() {
         if (reason === 'clickaway') {return}
         setSnackOpen(false);
     };
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const openMenu = Boolean(anchorEl);
+    function removeCartItem(id: string) {
+        //@ts-ignore
+        let newArray = cart.filter(function(el) { return el.id !== id; });
+        setCart(newArray);
+        setSnackSev('success')
+        setSnackText('Item removed')
+        setSnackOpen(true)
+    }
     return (
         <ThemeProvider theme={theme}>
         <Box>
@@ -92,6 +127,17 @@ function App() {
                                 {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
                             </IconButton>
                         </Tooltip>
+                        <Tooltip title="Cart" arrow>
+                            <IconButton
+                                sx={{ ml: 1 }}
+                                color="inherit"
+                                onClick={(event: React.MouseEvent<HTMLElement>) => {setAnchorEl(event.currentTarget)}}
+                            >
+                                <Badge badgeContent={cart.length} color="secondary">
+                                    <ShoppingCartIcon/>
+                                </Badge>
+                            </IconButton>
+                        </Tooltip>
                         <Tooltip title="Logout" arrow>
                             <IconButton sx={{ ml: 1 }} color="inherit">
                                 <LogoutIcon/>
@@ -105,7 +151,65 @@ function App() {
                 <Catalog/>
             </Box>
         </Box>
-            <Snackbar open={snackOpen} autoHideDuration={4000} onClose={snackClose}>
+            <Menu
+                id="long-menu"
+                MenuListProps={{
+                    'aria-labelledby': 'long-button',
+                }}
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                open={openMenu}
+                onClose={() => {setAnchorEl(null)}}
+                PaperProps={{
+                    style: {
+                        maxHeight: 500,
+                        minWidth: 300,
+                        maxWidth: 500
+                    },
+                }}
+            >
+                {cart.length === 0 ?
+                    <Box sx={{mx:1}}>
+                        <Typography color='text.secondary' sx={{fontWeight: '600'}}>
+                            No items added yet.
+                        </Typography>
+                        <Typography variant='subtitle2'>
+                            Tip - add items to your cart to send to the smart factory team.
+                            This tells us you're interested in these products, and we will reach out to you.
+                        </Typography>
+                    </Box>
+                    :
+                    <div key={'2'}>
+                        {cart.map((option) => (
+                            <Tooltip title='Click to Remove'>
+                                {/*@ts-ignore*/}
+                                <MenuItem key={option.id} onClick={() => removeCartItem(option.id)}>
+                                    {/*@ts-ignore*/}
+                                    <ListItemText>{option.title}</ListItemText>
+                                    <ListItemIcon sx={{ml:2, mr:-2}}>
+                                        <DeleteIcon/>
+                                    </ListItemIcon>
+                                </MenuItem>
+                            </Tooltip>
+                        ))}
+                        <Button
+                            fullWidth
+                            key={'1'}
+                            variant='contained'
+                            disableElevation color='secondary' size='small'>
+                            Send Cart
+                        </Button>
+                    </div>
+                }
+            </Menu>
+            <Snackbar open={snackOpen} autoHideDuration={2000} onClose={snackClose}>
                 {/*@ts-ignore*/}
                 <Alert onClose={snackClose} severity={snackSev} sx={{width: '100%'}}>
                     {snackText}

@@ -8,7 +8,7 @@ import {
     editCatagoryOpen,
     snackBarText,
     snackBarSeverity,
-    snackBarOpen
+    snackBarOpen, cartItems
 } from '../global/recoilMain'
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {catalogListAtom, filteredCatalog} from '../global/CatalogList'
@@ -25,13 +25,15 @@ import MenuItem from '@mui/material/MenuItem';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {areYouSure, areYouSureDetails, areYouSureTitle, areYouSureAccept} from "../global/recoilMain";
+import Tooltip from '@mui/material/Tooltip';
+import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 
 export default function CatalogDetails() {
     const [openModal, setOpenModal] = useRecoilState(categoryOpen)
     const setEditOpen = useSetRecoilState(editCatagoryOpen)
-    const itemDetails = useRecoilValue(categoryItem)
+    const itemID = useRecoilValue(categoryItem)
     const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
-    let currentItem = catalogList.find(x => x.key === itemDetails)
+    let currentItem = catalogList.find(x => x.key === itemID)
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [itemDelete, setItemDelete] = React.useState(false)
     const moreOpen = Boolean(anchorEl);
@@ -43,6 +45,7 @@ export default function CatalogDetails() {
     const setCheckDetails = useSetRecoilState(areYouSureDetails);
     const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
     const setFiltered = useSetRecoilState(filteredCatalog)
+    const [cart, setCart] = useRecoilState(cartItems)
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -69,7 +72,7 @@ export default function CatalogDetails() {
     }, [areYouSureOpen])
     async function handleDelete() {
         if (!itemDelete) {return}
-        let newArray = catalogList.filter(function(el) { return el.key !== itemDetails; });
+        let newArray = catalogList.filter(function(el) { return el.key !== itemID; });
         setCatalogList(newArray);
         setFiltered(newArray)
         setOpenModal(false)
@@ -79,7 +82,24 @@ export default function CatalogDetails() {
         setCheckAccept(false)
         setItemDelete(false)
     }
-
+    function addToCart() {
+        //@ts-ignore
+        if (cart.find(x => x.id === itemID)) {
+            setSnackSev('error')
+            setSnackText('Error: Item already in cart')
+            setSnackOpen(true)
+            return
+        }
+        let newItem = {
+            id: itemID,
+            title: currentItem === undefined ? '' : currentItem.longTitle
+        }
+        //@ts-ignore
+        setCart((prevState: any) => [...prevState, newItem])
+        setSnackSev('success')
+        setSnackText('Item added to cart')
+        setSnackOpen(true)
+    }
     return (
         <>
             <Dialog
@@ -88,17 +108,19 @@ export default function CatalogDetails() {
                 scroll='body'
             >
                 <DialogTitle sx={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                    <IconButton
-                        size='small'
-                        aria-label="more"
-                        aria-controls={moreOpen ? 'long-menu' : undefined}
-                        aria-expanded={moreOpen ? 'true' : undefined}
-                        aria-haspopup="true"
-                        onClick={handleClick}
-                        sx={{mr:0.5, ml:0}}
-                    >
-                        <MoreVertIcon/>
-                    </IconButton>
+                    <Tooltip title="Options" arrow>
+                        <IconButton
+                            size='small'
+                            aria-label="more"
+                            aria-controls={moreOpen ? 'long-menu' : undefined}
+                            aria-expanded={moreOpen ? 'true' : undefined}
+                            aria-haspopup="true"
+                            onClick={handleClick}
+                            sx={{mr:0.5, ml:0}}
+                        >
+                            <MoreVertIcon/>
+                        </IconButton>
+                    </Tooltip>
                     <div style={{flexGrow:'1'}}>
                         {currentItem?.longTitle}
                     </div>
@@ -112,10 +134,12 @@ export default function CatalogDetails() {
                         <Typography variant="caption" component="div" display='inline'>
                             {currentItem?.shortTitle}
                         </Typography>
-                        <Chip
-                            label={currentItem?.status}
-                            color={currentItem?.status === "in progress" ? 'warning' : (currentItem?.status === "released" ? 'secondary' : 'default')}
-                        />
+                        <Tooltip title="Status" arrow>
+                            <Chip
+                                label={currentItem?.status}
+                                color={currentItem?.status === "in progress" ? 'warning' : (currentItem?.status === "released" ? 'secondary' : 'default')}
+                            />
+                        </Tooltip>
                     </Box>
                     <Typography>
                         {currentItem?.description}
@@ -123,13 +147,28 @@ export default function CatalogDetails() {
                     <DialogContentText sx={{mb:1}}>
                         {currentItem?.details}
                     </DialogContentText>
-                    <Typography display='inline' color='text.secondary'>
-                        Adopted by:
-                    </Typography>
-                    {/*@ts-ignore*/}
-                    {currentItem?.unitAdoption.map(x => (
-                        <Chip size='small' sx={{mx:0.5}} key={x} color='primary' variant='outlined' label={x}/>
-                    ))}
+                    <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                        <Box>
+                            <Typography display='inline' color='text.secondary'>
+                                Adopted by:
+                            </Typography>
+                            {/*@ts-ignore*/}
+                            {currentItem?.unitAdoption.map(x => (
+                                <Chip size='small' sx={{mx:0.5}} key={x} color='primary' variant='outlined' label={x}/>
+                            ))}
+                        </Box>
+                        <Button
+                            onClick={addToCart}
+                            variant='contained'
+                            disableElevation
+                            sx={{color:'#FFFFFF'}}
+                            startIcon={<AddShoppingCartIcon/>}
+                            //@ts-ignore
+                            disabled={!!cart.find(x => x.id === itemID)}
+                        >
+                            Add to Cart
+                        </Button>
+                    </Box>
                     {currentItem?.link === null ? null :
                         //@ts-ignore
                         <Button size="small"
@@ -137,7 +176,7 @@ export default function CatalogDetails() {
                                 color='secondary'
                                 sx={{mt:1, display:'flex'}}
                                 component='a'
-                                href={currentItem?.link} target='blank'>Visit</Button>
+                                href={currentItem?.link} target='blank'>Visit Website</Button>
                     }
                 </DialogContent>
             </Dialog>
