@@ -1,0 +1,24 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - echo Installing NVM...
+      - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.34.0/install.sh | bash -      - . /root/.nvm/nvm.sh
+      - node --version
+      - echo Installing Node 12...
+      - . /root/.nvm/install.sh v12
+      - echo Installing Yarn...
+      - npm install yarn -g
+  pre_build:
+    commands:
+      - echo Installing dependencies...
+      - yarn
+  build:
+    commands:
+      - echo Building...
+      - yarn build
+artifacts:
+  files:
+    - "**/*"
+  discard-paths: no
+  base-directory: build

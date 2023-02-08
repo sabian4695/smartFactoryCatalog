@@ -22,6 +22,8 @@ import Typography from "@mui/material/Typography";
 import {snackBarSeverity, snackBarText, snackBarOpen} from "../global/recoilMain";
 import {unitOptions, statusOptions, orgOptions, departmentOptions} from "../global/DropDowns";
 import Tooltip from '@mui/material/Tooltip';
+import {itemType} from '../global/recoilTyped'
+import dayjs from 'dayjs';
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -73,10 +75,10 @@ export default function AddCatalogItem() {
         event.preventDefault()
         setErrorText('')
         if(verifyInputs()) {
-            let newItem = {
+            let newItem: itemType = {
                 longTitle: longTitle,
                 shortTitle: shortTitle,
-                status: status,
+                status: status === null ? '' : status,
                 imgURL: image,
                 link: webLink,
                 description: description,
@@ -84,7 +86,8 @@ export default function AddCatalogItem() {
                 unitAdoption: units,
                 org: org,
                 department: dept,
-                recordId: uuidv4()
+                recordId: uuidv4(),
+                createdDate: dayjs().valueOf(),
             }
             setCatalogList((prevState: any) => [...prevState, newItem]);
             setFiltered(catalogList)

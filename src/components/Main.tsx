@@ -15,8 +15,21 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import AddCatalogItem from '../components/modals/AddCatalogItem'
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, {AlertProps} from '@mui/material/Alert';
-import {snackBarOpen, snackBarText, snackBarSeverity, cartItems} from "./global/recoilMain";
-import {useRecoilState} from "recoil";
+import {
+    snackBarOpen,
+    snackBarText,
+    snackBarSeverity,
+    cartItems,
+    accessTokenAtom,
+    userIdAtom,
+    refreshTokenAtom,
+    accessExpiryAtom,
+    refreshExpiryAtom,
+    loggedInUserAtom,
+    loadingMessageSelector,
+    loadingTitle, loadingOpen, areYouSure, areYouSureTitle, areYouSureDetails, areYouSureAccept
+} from "./global/recoilMain";
+import {useRecoilState, useSetRecoilState} from "recoil";
 import FilterDrawer from "../components/modals/FilterDrawer";
 import EditCatalogItem from "../components/modals/EditCatalogItem";
 import AreYouSure from "../components/modals/AreYouSure";
@@ -52,6 +65,20 @@ function Main() {
     const [snackSev, setSnackSev] = useRecoilState(snackBarSeverity);
     const [snackOpen, setSnackOpen] = useRecoilState(snackBarOpen);
     const [snackText, setSnackText] = useRecoilState(snackBarText);
+    const [accessToken, setAccessToken] = useRecoilState(accessTokenAtom);
+    const setUserId = useSetRecoilState(userIdAtom);
+    const setRefreshToken = useSetRecoilState(refreshTokenAtom);
+    const setAccessExpiry = useSetRecoilState(accessExpiryAtom);
+    const setRefreshExpiry = useSetRecoilState(refreshExpiryAtom);
+    const setLoggedInUser = useSetRecoilState(loggedInUserAtom);
+    const [loadingMessage, setLoadingMessage] = useRecoilState(loadingMessageSelector);
+    const setLoadingTitle = useSetRecoilState(loadingTitle);
+    const setOpenLoad = useSetRecoilState(loadingOpen);
+    const [logout, setLogout] = React.useState(false)
+    const [areYouSureOpen, setAreYouSureOpen] = useRecoilState(areYouSure);
+    const setCheckTitle = useSetRecoilState(areYouSureTitle);
+    const setCheckDetails = useSetRecoilState(areYouSureDetails);
+    const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
     function setTheme() {
         if(mode === 'light') {
             setMode('dark')
@@ -73,6 +100,42 @@ function Main() {
             }
         }
     });
+    React.useEffect(() => {
+        if(!areYouSureOpen) {
+            if(checkAccept) {
+                handleLogout()
+            }
+            setLogout(false)
+        }
+    }, [areYouSureOpen])
+    async function handleLogout() {
+        if (!logout) {return}
+        setLoadingMessage('Logging Out')
+        setLoadingTitle('Logging Out')
+        setOpenLoad(true)
+        setUserId(null);
+        setAccessToken(null);
+        setRefreshToken(null);
+        setAccessExpiry(null);
+        setRefreshExpiry(null);
+        setLoggedInUser(null);
+        setLoggedInUser(null);
+        //setUserRole(null)
+        setLoadingMessage(null)
+        setOpenLoad(false)
+        setSnackSev('success')
+        setSnackText('Logged Out')
+        setSnackOpen(true)
+        setCheckAccept(false)
+        setLogout(false)
+    }
+    async function handleLogoutClick() {
+        setLogout(true)
+        setAnchorEl(null);
+        setCheckTitle('Are you sure you want to logout?')
+        setCheckDetails('You can always just sign in again, I guess.')
+        setAreYouSureOpen(true)
+    }
     const snackClose = (event?: React.SyntheticEvent | Event, reason?: string) => {
         if (reason === 'clickaway') {return}
         setSnackOpen(false);
@@ -128,7 +191,7 @@ function Main() {
                                 </IconButton>
                             </Tooltip>
                             <Tooltip title="Logout" arrow>
-                                <IconButton sx={{ ml: 1 }} color="inherit">
+                                <IconButton sx={{ ml: 1 }} color="inherit" onClick={handleLogoutClick}>
                                     <LogoutIcon/>
                                 </IconButton>
                             </Tooltip>
