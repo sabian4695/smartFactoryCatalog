@@ -41,9 +41,9 @@ export const getAppRoles = async (accessToken) => {
     return response?.data?.body ? JSON.parse(response.data.body) : response.data;
 }
 
-export const getTableItemByRecordType = async (accessToken, recordType) => {
+export const getCatalogItems = async (accessToken) => {
     const response = await axios.get(
-        `/smart-factory-catalog/${recordType}`,
+        `/smart-factory-catalog/catalogs`,
         {
             headers: {
                 'x-api-key': CONFIG.APP_API_KEY,
@@ -55,10 +55,10 @@ export const getTableItemByRecordType = async (accessToken, recordType) => {
     return response?.data?.body ? JSON.parse(response?.data) : response?.data
 }
 
-export const createTableItem = async (accessToken, recordType, recordId, obj) => {
+export const createTableItem = async (accessToken, catalogId, woObject) => {
     const response = await axios.put(
-        `/smart-factory-catalog/${recordType}`,
-        {recordType, recordId, obj},
+        `/smart-factory-catalog/${catalogId}`,
+        {catalogId, woObject},
         {
             headers: {
                 'x-api-key': CONFIG.APP_API_KEY,
@@ -70,9 +70,9 @@ export const createTableItem = async (accessToken, recordType, recordId, obj) =>
     return response?.status === 200 ? response?.data : null;
 }
 
-export const deleteTableItem = async (accessToken, recordType, recordId) => {
+export const deleteTableItem = async (accessToken, catalogId) => {
     const response = await axios.delete(
-        `/smart-factory-catalog/${recordType}/${recordId}`,
+        `/smart-factory-catalog/${catalogId}`,
         {
             headers: {
                 'x-api-key': CONFIG.APP_API_KEY,
@@ -83,4 +83,24 @@ export const deleteTableItem = async (accessToken, recordType, recordId) => {
     );
     if(response.status !== 200) return;
     return response?.data?.body ? JSON.parse(response?.data?.body) : response?.data;
+};
+
+export const getUploadUrl = async (accessToken, catalogId, type, action) => { //action = PUT or GET, //type = filetype i.e.
+    const response = await axios.get(
+        `/smart-factory-catalog/${catalogId}/photoUrl `,
+        {
+            headers: {
+                'x-api-key': CONFIG.APP_API_KEY,
+                Authorization: accessToken,
+            },
+            params: {
+                action: action,
+                type,
+            },
+            baseURL: BASE_URL,
+        },
+    );
+    if (response.status !== 200) return;
+    const data = response?.data?.body ? JSON.parse(response.data.body) : response.data;
+    return data.url;
 };

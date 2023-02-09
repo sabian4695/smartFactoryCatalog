@@ -28,12 +28,10 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
     const setSnackSev = useSetRecoilState(snackBarSeverity);
     const setSnackOpen = useSetRecoilState(snackBarOpen);
     function openItem() {
-        //@ts-ignore
         setItemDetails(sfItemID)
         setOpenModal(true)
     }
     function addToCart() {
-        //@ts-ignore
         if (cart.find(x => x.id === sfItemID)) {
             setSnackSev('error')
             setSnackText('Error: Item already in cart')
@@ -45,7 +43,6 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
             id: sfItemID,
             title: currentItem === undefined ? '' : currentItem.title
         }
-        //@ts-ignore
         setCart((prevState: any) => [...prevState, newItem])
         setSnackSev('success')
         setSnackText('Item added to cart')
@@ -56,13 +53,14 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
             <Grow in={true}>
                 <Box component='div' sx={{position:'relative'}}>
                     <Paper sx={{ width: 345 }} elevation={3}>
-                        {currentItem?.webLink === null ? null :
+                        {currentItem?.webLink === '' ? null :
                             <Tooltip title="Open website" arrow>
                                 <Button
                                     size="small"
                                     variant='contained'
                                     color='secondary'
                                     component='a'
+                                    //@ts-ignore
                                     href={currentItem?.webLink}
                                     target='blank'
                                     sx={{left:8,top:160,position:'absolute'}}
@@ -94,15 +92,11 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                             title={currentItem?.title}
                             alt={currentItem?.title}
                         />
-                        <CardContent sx={{ height: 175, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
+                        <CardContent sx={{ height: 185, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
                             <Box>
-                                <Box sx={{display:'flex',flexDirection:'row',justifyContent:'space-between',alignItems:'flex-end'}}>
-                                    <Typography variant="caption" component="div">
-                                        {currentItem?.title}
-                                    </Typography>
+                                <Box sx={{display:'flex',flexDirection:'row',justifyContent:'flex-end',alignItems:'flex-end'}}>
                                     <Tooltip title="Status" arrow>
                                         <Chip
-                                            sx={{mb:1}}
                                             label={currentItem?.status}
                                             color={currentItem?.status === "in progress" ? 'warning' : (currentItem?.status === "released" ? 'success' : 'default')}
                                         />
@@ -111,6 +105,15 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                                 <Typography variant="h5" component="div">
                                     {currentItem?.title}
                                 </Typography>
+                            </Box>
+                            <Box display='flex'>
+                                <Tooltip title="Software Available" arrow>
+                                    <Box>
+                                        {currentItem?.typeAvailable.map(x => (
+                                            <Chip label={x} size='small' sx={{mr:0.5, mb:0.5}}/>
+                                        ))}
+                                    </Box>
+                                </Tooltip>
                             </Box>
                             <Divider />
                             <Typography variant="body2" color="text.secondary">

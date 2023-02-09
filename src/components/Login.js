@@ -9,11 +9,12 @@ import {
     userIdAtom,
     loggedInUserAtom, themeMode,
     loadingTitle,
-    loadingOpen
+    loadingOpen,
+    userRole
 } from './global/recoilMain';
 import {getDataString, getDataInt, deleteData} from './helpers/storage';
 import {useRecoilState, useSetRecoilState} from 'recoil';
-import {login, refreshLogin} from './helpers/api';
+import {getAppRoles, login, refreshLogin} from './helpers/api';
 import {timeToLogout} from './helpers/misc';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -38,6 +39,7 @@ const Login = () => {
     const [loadingMessage, setLoadingMessage] = useRecoilState(loadingMessageSelector);
     const setLoadingTitle = useSetRecoilState(loadingTitle);
     const setOpenLoad = useSetRecoilState(loadingOpen);
+    const setUserRole = useSetRecoilState(userRole);
     const [accessToken, setAccessToken] = useRecoilState(accessTokenAtom);
     const setUserId = useSetRecoilState(userIdAtom);
     const setRefreshToken = useSetRecoilState(refreshTokenAtom);
@@ -214,6 +216,13 @@ const Login = () => {
             setLoggedInUser(authData.user);
             setUsernameValue('');
             setPasswordValue('');
+
+            getAppRoles(accessToken).then(response => {
+                console.log('USER ROLE RESPONSE: ' + response)
+                setUserRole(response)
+                setLoadingMessage(null)
+            })
+
         } catch (e) {
             setLoginError(true);
             console.error('login error ->', e);

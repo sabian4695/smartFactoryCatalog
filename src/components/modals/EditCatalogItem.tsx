@@ -1,7 +1,7 @@
 import React from 'react'
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {
-    editCatagoryOpen,
+    editCategoryOpen,
     snackBarOpen,
     snackBarSeverity,
     snackBarText,
@@ -27,7 +27,6 @@ import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import SaveIcon from '@mui/icons-material/Save';
 import Tooltip from '@mui/material/Tooltip';
-import {v4 as uuidv4} from "uuid";
 import dayjs, {Dayjs} from "dayjs";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
@@ -39,7 +38,7 @@ const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 export default function EditCatalogItem() {
-    const [openModal, setOpenModal] = useRecoilState(editCatagoryOpen)
+    const [openModal, setOpenModal] = useRecoilState(editCategoryOpen)
     const currentItem = useRecoilValue(categoryItem)
     const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
     let currentItemDetails: itemType | undefined = catalogList.find(x => x.recordId === currentItem)
@@ -131,17 +130,19 @@ export default function EditCatalogItem() {
                 releasedDate: dayjs(releaseDate).valueOf(),
             }
 
-            createTableItem(accessToken, 'Work_Order', updatedItem ).then(() => {
-                setOpenModal(false)
-            })
+            createTableItem(accessToken, currentItem, updatedItem ).then(() => {
 
-            setCatalogList(newArr)
-            setFiltered(catalogList)
-            setOpenModal(false)
-            setErrorText('')
-            setSnackSev('success')
-            setSnackText('Item updated!')
-            setSnackOpen(true)
+                //PUT IMAGE IN S3 BUCKEt
+
+                setCatalogList(newArr)
+                setFiltered(catalogList)
+                setOpenModal(false)
+                setErrorText('')
+                setSnackSev('success')
+                setSnackText('Item updated!')
+                setSnackOpen(true)
+                setOpenLoad(false)
+            })
         }
     }
     function changeImage(event: any) {
@@ -362,7 +363,7 @@ export default function EditCatalogItem() {
                     </DialogContent>
                     <Box sx={{mx:1, mt:0.5}}><Typography color='error'>{errorText}</Typography></Box>
                     <DialogActions>
-                        <Button fullWidth variant='outlined' type='submit' startIcon={<SaveIcon />}>
+                        <Button fullWidth variant='contained' type='submit' startIcon={<SaveIcon />} sx={{color: "#FFFFFF"}}>
                             Save Changes
                         </Button>
                     </DialogActions>

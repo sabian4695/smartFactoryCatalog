@@ -5,7 +5,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import {
     categoryOpen,
     categoryItem,
-    editCatagoryOpen,
+    editCategoryOpen,
     snackBarText,
     snackBarSeverity,
     snackBarOpen, accessTokenAtom, loadingTitle, loadingOpen
@@ -29,11 +29,10 @@ import Tooltip from '@mui/material/Tooltip';
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
 import {deleteTableItem} from "../helpers/api";
 
-
 export default function CatalogDetails() {
     const [openModal, setOpenModal] = useRecoilState(categoryOpen)
     const accessToken = useRecoilValue(accessTokenAtom)
-    const setEditOpen = useSetRecoilState(editCatagoryOpen)
+    const setEditOpen = useSetRecoilState(editCategoryOpen)
     const setLoadingTitle = useSetRecoilState(loadingTitle);
     const setOpenLoad = useSetRecoilState(loadingOpen);
     const itemID = useRecoilValue(categoryItem)
@@ -81,19 +80,18 @@ export default function CatalogDetails() {
         setLoadingTitle('Deleting item')
         setOpenLoad(true)
 
-        deleteTableItem(accessToken, 'Catalog_Item', itemID).then(() => {
+        deleteTableItem(accessToken, itemID).then(() => {
+            let newArray = catalogList.filter(function(el) { return el.recordId !== itemID; });
+            setCatalogList(newArray);
+            setFiltered(newArray)
+            setOpenModal(false)
+            setSnackSev('success')
+            setSnackText('Item deleted')
+            setSnackOpen(true)
+            setCheckAccept(false)
+            setItemDelete(false)
             setOpenLoad(false)
         })
-
-        let newArray = catalogList.filter(function(el) { return el.recordId !== itemID; });
-        setCatalogList(newArray);
-        setFiltered(newArray)
-        setOpenModal(false)
-        setSnackSev('success')
-        setSnackText('Item deleted')
-        setSnackOpen(true)
-        setCheckAccept(false)
-        setItemDelete(false)
     }
     function addToCart() {
         if (cart.find(x => x.id === itemID)) {
@@ -139,12 +137,16 @@ export default function CatalogDetails() {
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <img src={currentItem?.imgURL} style={{maxHeight:500, maxWidth:'100%', display:'flex',flexGrow:'1', justifySelf:'center',alignSelf:'center'}} loading='lazy'/>
+                <img alt={currentItem?.title} src={currentItem?.imgURL} style={{maxHeight:500, maxWidth:'100%', display:'flex',flexGrow:'1', justifySelf:'center',alignSelf:'center'}} loading='lazy'/>
                 <DialogContent>
-                    <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                        <Typography variant="caption" component="div" display='inline'>
-                            {currentItem?.title}
-                        </Typography>
+                    <Box sx={{display:'flex',flexDirection:'row',justifyContent:'space-between',alignItems:'flex-end'}}>
+                        <Tooltip title="Software Available" arrow>
+                            <Box>
+                                {currentItem?.typeAvailable.map(x => (
+                                    <Chip label={x} size='small' sx={{mr:0.5, mb:0.5}}/>
+                                ))}
+                            </Box>
+                        </Tooltip>
                         <Tooltip title="Status" arrow>
                             <Chip
                                 label={currentItem?.status}
@@ -160,9 +162,11 @@ export default function CatalogDetails() {
                     </DialogContentText>
                     <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                         <Box>
-                            <Typography display='inline' color='text.secondary'>
-                                Adopted by:
-                            </Typography>
+                            {currentItem?.unitAdoption.length === 0 ? null :
+                                <Typography display='inline' color='text.secondary'>
+                                    Adopted by:
+                                </Typography>
+                            }
                             {/*@ts-ignore*/}
                             {currentItem?.unitAdoption.map(x => (
                                 <Chip size='small' sx={{mx:0.5}} key={x} color='primary' variant='outlined' label={x}/>
@@ -179,20 +183,22 @@ export default function CatalogDetails() {
                             Add to Cart
                         </Button>
                     </Box>
-                    {currentItem?.webLink === null ? null :
+                    {currentItem?.webLink === '' ? null :
                         <Button size="small"
                                 variant='outlined'
                                 color='secondary'
                                 sx={{mt:1, display:'flex'}}
                                 component='a'
+                                //@ts-ignore
                                 href={currentItem?.webLink} target='blank'>Visit Website</Button>
                     }
-                    {currentItem?.reportLink === null ? null :
+                    {currentItem?.reportLink === '' ? null :
                         <Button size="small"
                                 variant='outlined'
                                 color='secondary'
                                 sx={{mt:1, display:'flex'}}
                                 component='a'
+                                //@ts-ignore
                                 href={currentItem?.reportLink} target='blank'>See Reports</Button>
                     }
                 </DialogContent>

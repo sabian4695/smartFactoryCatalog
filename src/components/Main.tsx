@@ -42,7 +42,8 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
 import {cartItems, catalogListAtom, filteredCatalog} from './global/recoilTyped'
-import {getTableItemByRecordType} from "./helpers/api";
+import {getCatalogItems} from "./helpers/api";
+import {ListItem} from "@mui/material";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -162,14 +163,14 @@ function Main() {
     }
 
     React.useEffect(() => {
-        setLoadingTitle('Refreshing Data')
-        //setOpenLoad(true)
+        setLoadingTitle('Getting Data')
+        setOpenLoad(true)
 
-        // getTableItemByRecordType(accessToken, "Catalog_Item").then(response => {
-        //     setCatalogList(response.getRecords)
-        //     setFiltered(response.getRecords)
-        //     setOpenLoad(false)
-        // })
+        getCatalogItems(accessToken).then(response => {
+            setCatalogList(response.catalogs)
+            setFiltered(response.catalogs)
+            setOpenLoad(false)
+        })
 
     }, [])
 
@@ -256,27 +257,38 @@ function Main() {
                         </Typography>
                     </Box>
                     :
-                    <div key={'2'}>
+                    <Box key={'2'}>
+                        <Typography sx={{ml:1}} fontWeight='bold' color='text.secondary' variant='subtitle2'>
+                            Cart
+                        </Typography>
                         {cart.map((option) => (
-                            <Tooltip title='Click to Remove'>
-                                {/*@ts-ignore*/}
-                                <MenuItem key={option.id} onClick={() => removeCartItem(option.id)}>
+                            <>
+                                <Tooltip title='Click to Remove' arrow>
                                     {/*@ts-ignore*/}
-                                    <ListItemText>{option.title}</ListItemText>
-                                    <ListItemIcon sx={{ml:2, mr:-2}}>
-                                        <DeleteIcon/>
-                                    </ListItemIcon>
-                                </MenuItem>
-                            </Tooltip>
+                                    <MenuItem key={option.id} onClick={() => removeCartItem(option.id)}>
+                                        {/*@ts-ignore*/}
+                                        <ListItemText>{option.title}</ListItemText>
+                                        <ListItemIcon sx={{ml:2, mr:-2}}>
+                                            <DeleteIcon/>
+                                        </ListItemIcon>
+                                    </MenuItem>
+                                </Tooltip>
+                            </>
                         ))}
-                        <Button
-                            fullWidth
-                            key={'1'}
-                            variant='contained'
-                            disableElevation color='secondary' size='small'>
-                            Send Cart
-                        </Button>
-                    </div>
+                        <ListItem disablePadding sx={{mt:1}}>
+                            <Tooltip title='Informs Smart Factory team that you are interested in what you have selected!' arrow>
+                                <Button
+                                    sx={{mx:1}}
+                                    fullWidth
+                                    key={'1'}
+                                    variant='contained'
+                                    disableElevation color='secondary' size='small'
+                                >
+                                    Send Cart
+                                </Button>
+                            </Tooltip>
+                        </ListItem>
+                    </Box>
                 }
             </Menu>
             <Snackbar

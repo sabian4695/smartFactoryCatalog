@@ -32,7 +32,7 @@ export default function Catalog() {
                 </Grid>
             ))}
             </Grid>
-            <Fab sx={{position: 'fixed', bottom: 16, right: 16,}} color='primary' variant='extended' onClick={() => setAddCategoryOpen(true)}>
+            <Fab sx={{position: 'fixed', bottom: 16, right: 16, color:'#FFFFFF'}} color='primary' variant='extended' onClick={() => setAddCategoryOpen(true)}>
                 <AddIcon/> Add New Item
             </Fab>
         </>

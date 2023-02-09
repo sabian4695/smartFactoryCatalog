@@ -103,24 +103,28 @@ export default function AddCatalogItem() {
                 releasedDate: releaseDate === null ? null : dayjs(releaseDate).valueOf(),
             }
 
-            createTableItem(accessToken, 'Catalog_Item', newItem.recordId, newItem).then(() => {
+            createTableItem(accessToken, newItem.recordId, newItem).then(() => {
+
+                //PUT IMAGE IN S3 BUCKET
+
+                if(catalogList.length === 0) {
+                    setCatalogList([newItem])
+                } else {
+                    setCatalogList((prevState: any) => [...prevState, newItem]);
+                }
+                setOpenModal(false)
+                setErrorText('')
+                setSnackSev('success')
+                setSnackText('Item Added!')
+                setSnackOpen(true)
                 setOpenLoad(false)
             })
-
-            if(catalogList.length === 0) {
-                setCatalogList([newItem])
-                setFiltered([newItem])
-            } else {
-                setCatalogList((prevState: any) => [...prevState, newItem]);
-                setFiltered(catalogList)
-            }
-            setOpenModal(false)
-            setErrorText('')
-            setSnackSev('success')
-            setSnackText('Item Added!')
-            setSnackOpen(true)
         }
     }
+
+    React.useEffect(() => {
+        setFiltered(catalogList)
+    }, [catalogList])
 
     React.useEffect(() => {
         if (openModal) return;
@@ -138,18 +142,6 @@ export default function AddCatalogItem() {
         setReleaseDate(null)
         setErrorText('')
     }, [openModal])
-    function changeImage(event: any) {
-        const fileExtension = event.target.value.split(".").at(-1);
-        const allowedFileTypes = "jpg"
-        if (!allowedFileTypes.includes(fileExtension)) {
-            setSnackSev('error')
-            setSnackText('File must be a jpg')
-            setSnackOpen(true)
-            setErrorText('File must be a jpg')
-            return false;
-        }
-        setImage(event.target.value)
-    }
     return(
         <>
             <Dialog
@@ -190,12 +182,12 @@ export default function AddCatalogItem() {
                             <Grid xs='auto' sx={{display: 'flex', flexGrow: '1'}}>
                                 <Tooltip title='JPG files only' arrow>
                                     <Button variant="contained" component="label" fullWidth color='secondary' disableElevation>
-                                        Upload Image
+                                        Upload Image (jpg)
                                         <input
                                             value={image}
-                                            onChange={changeImage}
+                                            onChange={(event: any) => setImage(event.target.value)}
                                             hidden
-                                            accept="image/*"
+                                            accept="image/jpg"
                                             type="file"
                                         />
                                     </Button>
@@ -339,7 +331,7 @@ export default function AddCatalogItem() {
                 </DialogContent>
                 <Box sx={{mx:1, mt:0.5}}><Typography color='error'>{errorText}</Typography></Box>
                 <DialogActions>
-                    <Button fullWidth variant='outlined' type='submit' startIcon={<AddIcon />}>
+                    <Button fullWidth variant='contained' type='submit' startIcon={<AddIcon />} sx={{color: "#FFFFFF"}}>
                         Add Item
                     </Button>
                 </DialogActions>

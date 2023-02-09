@@ -31,8 +31,8 @@ export const addCategoryOpen = atom({
     default: false,
 });
 
-export const editCatagoryOpen = atom({
-    key: "editCatagoryOpen",
+export const editCategoryOpen = atom({
+    key: "editCategoryOpen",
     default: false,
 });
 
@@ -164,4 +164,9 @@ export const lastActivityAtom = atom({
     key: 'lastActivity',
     default: null,
     effects_UNSTABLE: [loggingEffect('lastActivity')],
+});
+
+export const userRole = atom({
+    key: 'userRole',
+    default: '',
 });
