@@ -2,12 +2,12 @@ import React from 'react'
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
-import {catalogListAtom} from "./global/CatalogList";
+import {catalogListAtom, cartItems} from "./global/recoilTyped";
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {cartItems, categoryItem, categoryOpen, snackBarOpen, snackBarSeverity, snackBarText} from "./global/recoilMain";
+import {categoryItem, categoryOpen, snackBarOpen, snackBarSeverity, snackBarText} from "./global/recoilMain";
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
@@ -43,7 +43,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
 
         let newItem = {
             id: sfItemID,
-            title: currentItem === undefined ? '' : currentItem.longTitle
+            title: currentItem === undefined ? '' : currentItem.title
         }
         //@ts-ignore
         setCart((prevState: any) => [...prevState, newItem])
@@ -56,15 +56,14 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
             <Grow in={true}>
                 <Box component='div' sx={{position:'relative'}}>
                     <Paper sx={{ width: 345 }} elevation={3}>
-                        {currentItem?.link === null ? null :
-                            //@ts-ignore
+                        {currentItem?.webLink === null ? null :
                             <Tooltip title="Open website" arrow>
                                 <Button
                                     size="small"
                                     variant='contained'
                                     color='secondary'
                                     component='a'
-                                    href={currentItem?.link}
+                                    href={currentItem?.webLink}
                                     target='blank'
                                     sx={{left:8,top:160,position:'absolute'}}
                                 >
@@ -72,29 +71,45 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                                 </Button>
                             </Tooltip>
                         }
+                        {currentItem?.reportLink ===  '' ? null :
+                            <Tooltip title="Open Report" arrow>
+                                <Button
+                                    size="small"
+                                    variant='contained'
+                                    color='secondary'
+                                    component='a'
+                                    //@ts-ignore
+                                    href={currentItem?.reportLink}
+                                    target='blank'
+                                    sx={{right:8,top:160,position:'absolute'}}
+                                >
+                                    Report
+                                </Button>
+                            </Tooltip>
+                        }
                         <CardMedia
                             sx={{ height: 200 }}
                             image={currentItem?.imgURL}
                             component='img'
-                            title={currentItem?.shortTitle}
-                            alt={currentItem?.shortTitle}
+                            title={currentItem?.title}
+                            alt={currentItem?.title}
                         />
                         <CardContent sx={{ height: 175, display:'flex', flexDirection:'column', justifyContent:'space-between'}}>
                             <Box>
                                 <Box sx={{display:'flex',flexDirection:'row',justifyContent:'space-between',alignItems:'flex-end'}}>
                                     <Typography variant="caption" component="div">
-                                        {currentItem?.shortTitle}
+                                        {currentItem?.title}
                                     </Typography>
                                     <Tooltip title="Status" arrow>
                                         <Chip
                                             sx={{mb:1}}
                                             label={currentItem?.status}
-                                            color={currentItem?.status === "in progress" ? 'warning' : (currentItem?.status === "released" ? 'secondary' : 'default')}
+                                            color={currentItem?.status === "in progress" ? 'warning' : (currentItem?.status === "released" ? 'success' : 'default')}
                                         />
                                     </Tooltip>
                                 </Box>
                                 <Typography variant="h5" component="div">
-                                    {currentItem?.longTitle}
+                                    {currentItem?.title}
                                 </Typography>
                             </Box>
                             <Divider />

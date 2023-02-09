@@ -1,22 +1,41 @@
 import {atom} from 'recoil'
-import materialPurchasingTool from "../../images/materialPurchasingTool.png";
+import {v4 as uuidv4} from "uuid";
 
 export interface itemType {
     recordId: string,
-    longTitle: string,
-    shortTitle: string,
+    title: string,
     status: string,
     imgURL: string,
-    link: string | null,
+    webLink: string | null,
+    reportLink: string | null,
     description: string,
     details: string,
-    unitAdoption: string[] | null,
+    unitAdoption: string[],
     department: string | null,
     org: string | null,
+    typeAvailable: string[],
     createdDate: number,
+    releasedDate: number | null,
 }
 
-export const catalogList = atom({
+export interface cartItem {
+    id: string,
+    title: string,
+}
+
+export const cartItems = atom({
+    key: "cartItems",
+    default: [] as cartItem[],
+});
+
+const list: itemType[]  = []
+
+export const catalogListAtom = atom({
     key: "catalogList",
-    default: [] as itemType[],
+    default: list,
+});
+
+export const filteredCatalog = atom({
+    key: "filteredCatalog",
+    default: list,
 });

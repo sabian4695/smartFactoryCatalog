@@ -8,10 +8,10 @@ import {
     editCatagoryOpen,
     snackBarText,
     snackBarSeverity,
-    snackBarOpen, cartItems
+    snackBarOpen, accessTokenAtom, loadingTitle, loadingOpen
 } from '../global/recoilMain'
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {catalogListAtom, filteredCatalog} from '../global/CatalogList'
+import {catalogListAtom, filteredCatalog, cartItems, cartItem} from '../global/recoilTyped'
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Typography from "@mui/material/Typography";
@@ -27,10 +27,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {areYouSure, areYouSureDetails, areYouSureTitle, areYouSureAccept} from "../global/recoilMain";
 import Tooltip from '@mui/material/Tooltip';
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
+import {deleteTableItem} from "../helpers/api";
+
 
 export default function CatalogDetails() {
     const [openModal, setOpenModal] = useRecoilState(categoryOpen)
+    const accessToken = useRecoilValue(accessTokenAtom)
     const setEditOpen = useSetRecoilState(editCatagoryOpen)
+    const setLoadingTitle = useSetRecoilState(loadingTitle);
+    const setOpenLoad = useSetRecoilState(loadingOpen);
     const itemID = useRecoilValue(categoryItem)
     const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
     let currentItem = catalogList.find(x => x.recordId === itemID)
@@ -72,6 +77,14 @@ export default function CatalogDetails() {
     }, [areYouSureOpen])
     async function handleDelete() {
         if (!itemDelete) {return}
+
+        setLoadingTitle('Deleting item')
+        setOpenLoad(true)
+
+        deleteTableItem(accessToken, 'Catalog_Item', itemID).then(() => {
+            setOpenLoad(false)
+        })
+
         let newArray = catalogList.filter(function(el) { return el.recordId !== itemID; });
         setCatalogList(newArray);
         setFiltered(newArray)
@@ -83,18 +96,16 @@ export default function CatalogDetails() {
         setItemDelete(false)
     }
     function addToCart() {
-        //@ts-ignore
         if (cart.find(x => x.id === itemID)) {
             setSnackSev('error')
             setSnackText('Error: Item already in cart')
             setSnackOpen(true)
             return
         }
-        let newItem = {
+        let newItem: cartItem = {
             id: itemID,
-            title: currentItem === undefined ? '' : currentItem.longTitle
+            title: currentItem === undefined ? '' : currentItem.title
         }
-        //@ts-ignore
         setCart((prevState: any) => [...prevState, newItem])
         setSnackSev('success')
         setSnackText('Item added to cart')
@@ -122,7 +133,7 @@ export default function CatalogDetails() {
                         </IconButton>
                     </Tooltip>
                     <div style={{flexGrow:'1'}}>
-                        {currentItem?.longTitle}
+                        {currentItem?.title}
                     </div>
                     <IconButton color="secondary" onClick={() => setOpenModal(false)}>
                         <CloseIcon />
@@ -132,12 +143,12 @@ export default function CatalogDetails() {
                 <DialogContent>
                     <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                         <Typography variant="caption" component="div" display='inline'>
-                            {currentItem?.shortTitle}
+                            {currentItem?.title}
                         </Typography>
                         <Tooltip title="Status" arrow>
                             <Chip
                                 label={currentItem?.status}
-                                color={currentItem?.status === "in progress" ? 'warning' : (currentItem?.status === "released" ? 'secondary' : 'default')}
+                                color={currentItem?.status === "in progress" ? 'warning' : (currentItem?.status === "released" ? 'success' : 'default')}
                             />
                         </Tooltip>
                     </Box>
@@ -163,20 +174,26 @@ export default function CatalogDetails() {
                             disableElevation
                             sx={{color:'#FFFFFF'}}
                             startIcon={<AddShoppingCartIcon/>}
-                            //@ts-ignore
                             disabled={!!cart.find(x => x.id === itemID)}
                         >
                             Add to Cart
                         </Button>
                     </Box>
-                    {currentItem?.link === null ? null :
-                        //@ts-ignore
+                    {currentItem?.webLink === null ? null :
                         <Button size="small"
                                 variant='outlined'
                                 color='secondary'
                                 sx={{mt:1, display:'flex'}}
                                 component='a'
-                                href={currentItem?.link} target='blank'>Visit Website</Button>
+                                href={currentItem?.webLink} target='blank'>Visit Website</Button>
+                    }
+                    {currentItem?.reportLink === null ? null :
+                        <Button size="small"
+                                variant='outlined'
+                                color='secondary'
+                                sx={{mt:1, display:'flex'}}
+                                component='a'
+                                href={currentItem?.reportLink} target='blank'>See Reports</Button>
                     }
                 </DialogContent>
             </Dialog>

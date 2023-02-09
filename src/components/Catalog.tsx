@@ -1,6 +1,6 @@
 import React from 'react'
 import CatalogItem from './CatalogItem'
-import {filteredCatalog} from './global/CatalogList'
+import {filteredCatalog} from './global/recoilTyped'
 import Grid from '@mui/material/Unstable_Grid2';
 import Fab from '@mui/material/Fab';
 import AddIcon from '@mui/icons-material/Add';

@@ -76,11 +76,6 @@ export const areYouSureAccept = atom({
     default: false,
 });
 
-export const cartItems = atom({
-    key: "cartItems",
-    default: [],
-});
-
 export const loadingTitle = atom({
     key: 'loadingTitle',
     default: '',

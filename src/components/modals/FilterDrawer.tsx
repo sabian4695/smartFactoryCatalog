@@ -13,7 +13,7 @@ import {filterDrawerOpen, snackBarOpen, snackBarSeverity, snackBarText} from '..
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import TuneIcon from '@mui/icons-material/Tune';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {catalogListAtom, filteredCatalog} from '../global/CatalogList'
+import {catalogListAtom, filteredCatalog} from '../global/recoilTyped'
 
 export default function FilterDrawer() {
     const [openDrawer, setOpenDrawer] = useRecoilState(filterDrawerOpen)

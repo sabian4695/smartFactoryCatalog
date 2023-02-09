@@ -5,8 +5,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import DialogContent from "@mui/material/DialogContent";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
-import {useSetRecoilState, useRecoilState} from "recoil";
-import {addCategoryOpen} from "../global/recoilMain";
+import {useSetRecoilState, useRecoilState, useRecoilValue} from "recoil";
+import {accessTokenAtom, addCategoryOpen, loadingOpen, loadingTitle} from "../global/recoilMain";
 import Grid from '@mui/material/Unstable_Grid2';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -15,32 +15,41 @@ import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import Checkbox from '@mui/material/Checkbox';
 import AddIcon from '@mui/icons-material/Add';
 import Box from '@mui/material/Box';
-import {catalogListAtom, filteredCatalog} from '../global/CatalogList'
+import {catalogListAtom, filteredCatalog} from '../global/recoilTyped'
 import {v4 as uuidv4} from "uuid";
 import DialogActions from '@mui/material/DialogActions';
 import Typography from "@mui/material/Typography";
 import {snackBarSeverity, snackBarText, snackBarOpen} from "../global/recoilMain";
-import {unitOptions, statusOptions, orgOptions, departmentOptions} from "../global/DropDowns";
+import {unitOptions, statusOptions, orgOptions, departmentOptions, typeOptions} from "../global/DropDowns";
 import Tooltip from '@mui/material/Tooltip';
 import {itemType} from '../global/recoilTyped'
-import dayjs from 'dayjs';
+import dayjs, {Dayjs} from "dayjs";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {DatePicker} from "@mui/x-date-pickers/DatePicker";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import {createTableItem} from "../helpers/api";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 export default function AddCatalogItem() {
     const [openModal, setOpenModal] = useRecoilState(addCategoryOpen)
-    const [longTitle, setLongTitle] = React.useState('')
-    const [shortTitle, setShortTitle] = React.useState('')
-    const [status, setStatus] = React.useState<string | null>(statusOptions[0]);
+    const accessToken = useRecoilValue(accessTokenAtom)
+    const [title, setTitle] = React.useState('')
+    const [status, setStatus] = React.useState<string | null>(null);
     const [image, setImage] = React.useState('')
     const [webLink, setWebLink] = React.useState('')
+    const [reportLink, setReportLink] = React.useState('')
     const [description, setDescription] = React.useState('')
     const [details, setDetails] = React.useState('')
-    const [units, setUnits] = React.useState([unitOptions[0]])
-    const [org, setOrg] = React.useState<string | null>(orgOptions[0]);
-    const [dept, setDept] = React.useState<string | null>(departmentOptions[0]);
+    const [units, setUnits] = React.useState<string[]>([])
+    const [org, setOrg] = React.useState<string | null>(null);
+    const [type, setType] = React.useState<string[]>([])
+    const [dept, setDept] = React.useState<string | null>(null);
+    const [releaseDate, setReleaseDate] = React.useState<Dayjs | null>(dayjs())
     const [errorText, setErrorText] = React.useState('')
+    const setLoadingTitle = useSetRecoilState(loadingTitle);
+    const setOpenLoad = useSetRecoilState(loadingOpen);
     const setSnackText = useSetRecoilState(snackBarText);
     const setSnackSev = useSetRecoilState(snackBarSeverity);
     const setSnackOpen = useSetRecoilState(snackBarOpen);
@@ -48,16 +57,16 @@ export default function AddCatalogItem() {
     const setFiltered = useSetRecoilState(filteredCatalog)
 
     const verifyInputs = () => {
-        if (longTitle === '' || longTitle === null) {
+        if (title === '' || title === null) {
             setErrorText('Please enter a Long Title')
-            return false
-        }
-        if (shortTitle === '' || shortTitle === null) {
-            setErrorText('Please enter a Short Title')
             return false
         }
         if (status === '' || status === null) {
             setErrorText('Please enter a Status')
+            return false
+        }
+        if (type.length === 0) {
+            setErrorText('Please enter a Type')
             return false
         }
         if (description === '' || description === null) {
@@ -71,26 +80,40 @@ export default function AddCatalogItem() {
         return true
     }
 
-    function handleSubmit(event: any) {
+    async function handleSubmit(event: any) {
         event.preventDefault()
         setErrorText('')
+        setLoadingTitle('Creating Catalog Item')
+        setOpenLoad(true)
         if(verifyInputs()) {
             let newItem: itemType = {
-                longTitle: longTitle,
-                shortTitle: shortTitle,
+                title: title,
                 status: status === null ? '' : status,
                 imgURL: image,
-                link: webLink,
+                webLink: webLink,
+                reportLink: reportLink,
                 description: description,
                 details: details,
                 unitAdoption: units,
                 org: org,
+                typeAvailable: type,
                 department: dept,
                 recordId: uuidv4(),
                 createdDate: dayjs().valueOf(),
+                releasedDate: releaseDate === null ? null : dayjs(releaseDate).valueOf(),
             }
-            setCatalogList((prevState: any) => [...prevState, newItem]);
-            setFiltered(catalogList)
+
+            createTableItem(accessToken, 'Catalog_Item', newItem.recordId, newItem).then(() => {
+                setOpenLoad(false)
+            })
+
+            if(catalogList.length === 0) {
+                setCatalogList([newItem])
+                setFiltered([newItem])
+            } else {
+                setCatalogList((prevState: any) => [...prevState, newItem]);
+                setFiltered(catalogList)
+            }
             setOpenModal(false)
             setErrorText('')
             setSnackSev('success')
@@ -101,16 +124,18 @@ export default function AddCatalogItem() {
 
     React.useEffect(() => {
         if (openModal) return;
-        setLongTitle('')
-        setShortTitle('')
-        setStatus(statusOptions[0])
+        setTitle('')
+        setStatus(null)
         setImage('')
         setWebLink('')
+        setReportLink('')
         setDescription('')
         setDetails('')
-        setUnits([unitOptions[0]])
-        setOrg(orgOptions[0])
-        setDept(departmentOptions[0])
+        setUnits([])
+        setOrg(null)
+        setType([])
+        setDept(null)
+        setReleaseDate(null)
         setErrorText('')
     }, [openModal])
     function changeImage(event: any) {
@@ -144,22 +169,14 @@ export default function AddCatalogItem() {
                             <Grid xs={12}>
                                 <TextField
                                     required
-                                    value={longTitle}
-                                    onChange={(event: any) => setLongTitle(event.target.value)}
+                                    autoFocus
+                                    value={title}
+                                    onChange={(event: any) => setTitle(event.target.value)}
                                     label='Long Title'
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid xs={12} sm={4}>
-                                <TextField
-                                    required
-                                    value={shortTitle}
-                                    onChange={(event: any) => setShortTitle(event.target.value)}
-                                    label='Short Title'
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid xs={12} sm={4}>
+                            <Grid xs={12} sm={6}>
                                 <Autocomplete
                                     value={status}
                                     onChange={(event: any, newValue: string | null) => {
@@ -184,12 +201,49 @@ export default function AddCatalogItem() {
                                     </Button>
                                 </Tooltip>
                             </Grid>
-                            <Grid xs={12}>
+                            <Grid xs={12} sm={6}>
                                 <TextField
                                     value={webLink}
                                     onChange={(event: any) => setWebLink(event.target.value)}
                                     label='Web Link'
                                     fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={12} sm={6}>
+                                <TextField
+                                    value={reportLink}
+                                    onChange={(event: any) => setReportLink(event.target.value)}
+                                    label='Report Link'
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={12}>
+                                <Autocomplete
+                                    multiple
+                                    value={type}
+                                    onChange={(event, newValue) => {
+                                        setType([
+                                            ...newValue,
+                                        ]);
+                                    }}
+                                    id="checkboxes-tags-demo"
+                                    options={typeOptions}
+                                    disableCloseOnSelect
+                                    getOptionLabel={(option) => option}
+                                    renderOption={(props, option, { selected }) => (
+                                        <li {...props}>
+                                            <Checkbox
+                                                icon={icon}
+                                                checkedIcon={checkedIcon}
+                                                style={{ marginRight: 8 }}
+                                                checked={selected}
+                                            />
+                                            {option}
+                                        </li>
+                                    )}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Types Available *" placeholder="Available" />
+                                    )}
                                 />
                             </Grid>
                             <Grid xs={12}>
@@ -212,7 +266,7 @@ export default function AddCatalogItem() {
                                     rows={2}
                                 />
                             </Grid>
-                            <Grid xs={12}>
+                            <Grid xs={12} sm={6}>
                                 <Autocomplete
                                     multiple
                                     value={units}
@@ -242,6 +296,24 @@ export default function AddCatalogItem() {
                                 />
                             </Grid>
                             <Grid xs={12} sm={6}>
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DatePicker
+                                        closeOnSelect
+                                        label="Release Date"
+                                        value={releaseDate}
+                                        onChange={(newValue) => {
+                                            setReleaseDate(newValue);
+                                        }}
+                                        renderInput={(params) => <TextField {...params} fullWidth/>}
+                                        componentsProps={{
+                                            actionBar: {
+                                                actions: ['today'],
+                                            },
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            </Grid>
+                            <Grid xs={12} sm={6}>
                                 <Autocomplete
                                     value={org}
                                     onChange={(event: any, newValue: string | null) => {
@@ -264,7 +336,6 @@ export default function AddCatalogItem() {
                                 />
                             </Grid>
                         </Grid>
-
                 </DialogContent>
                 <Box sx={{mx:1, mt:0.5}}><Typography color='error'>{errorText}</Typography></Box>
                 <DialogActions>

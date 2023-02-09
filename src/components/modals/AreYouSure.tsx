@@ -24,7 +24,7 @@ export default function AreYouSure() {
                 open={open}
                 onClose={() => setOpen(false)}
             >
-                <Box sx={{height:'100%'}}>
+                <Box sx={{height:'100%'}} component='form' onSubmit={() => handleClick(true)}>
                     <DialogTitle>
                         {title}
                     </DialogTitle>
@@ -35,7 +35,7 @@ export default function AreYouSure() {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => handleClick(false)} size='small'>Nevermind</Button>
-                        <Button onClick={() => handleClick(true)} size='small' autoFocus variant='contained'>
+                        <Button type='submit' size='small' autoFocus variant='contained'>
                             confirm
                         </Button>
                     </DialogActions>

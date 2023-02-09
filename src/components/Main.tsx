@@ -19,7 +19,6 @@ import {
     snackBarOpen,
     snackBarText,
     snackBarSeverity,
-    cartItems,
     accessTokenAtom,
     userIdAtom,
     refreshTokenAtom,
@@ -29,7 +28,7 @@ import {
     loadingMessageSelector,
     loadingTitle, loadingOpen, areYouSure, areYouSureTitle, areYouSureDetails, areYouSureAccept
 } from "./global/recoilMain";
-import {useRecoilState, useSetRecoilState} from "recoil";
+import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import FilterDrawer from "../components/modals/FilterDrawer";
 import EditCatalogItem from "../components/modals/EditCatalogItem";
 import AreYouSure from "../components/modals/AreYouSure";
@@ -42,6 +41,8 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
+import {cartItems, catalogListAtom, filteredCatalog} from './global/recoilTyped'
+import {getTableItemByRecordType} from "./helpers/api";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -65,13 +66,13 @@ function Main() {
     const [snackSev, setSnackSev] = useRecoilState(snackBarSeverity);
     const [snackOpen, setSnackOpen] = useRecoilState(snackBarOpen);
     const [snackText, setSnackText] = useRecoilState(snackBarText);
-    const [accessToken, setAccessToken] = useRecoilState(accessTokenAtom);
+    const setAccessToken = useSetRecoilState(accessTokenAtom);
     const setUserId = useSetRecoilState(userIdAtom);
     const setRefreshToken = useSetRecoilState(refreshTokenAtom);
     const setAccessExpiry = useSetRecoilState(accessExpiryAtom);
     const setRefreshExpiry = useSetRecoilState(refreshExpiryAtom);
     const setLoggedInUser = useSetRecoilState(loggedInUserAtom);
-    const [loadingMessage, setLoadingMessage] = useRecoilState(loadingMessageSelector);
+    const setLoadingMessage = useSetRecoilState(loadingMessageSelector);
     const setLoadingTitle = useSetRecoilState(loadingTitle);
     const setOpenLoad = useSetRecoilState(loadingOpen);
     const [logout, setLogout] = React.useState(false)
@@ -79,13 +80,22 @@ function Main() {
     const setCheckTitle = useSetRecoilState(areYouSureTitle);
     const setCheckDetails = useSetRecoilState(areYouSureDetails);
     const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
+    const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
+    const accessToken = useRecoilValue(accessTokenAtom)
+    const setFiltered = useSetRecoilState(filteredCatalog)
     function setTheme() {
         if(mode === 'light') {
             setMode('dark')
             localStorage.setItem('themeMode','dark')
+            setSnackSev('success')
+            setSnackText('Dark mode activated')
+            setSnackOpen(true)
         } else {
             setMode('light')
             localStorage.setItem('themeMode','light')
+            setSnackSev('success')
+            setSnackText('Initiated light mode')
+            setSnackOpen(true)
         }
     }
     const theme = createTheme({
@@ -146,13 +156,21 @@ function Main() {
         //@ts-ignore
         let newArray = cart.filter(function(el) { return el.id !== id; });
         setCart(newArray);
-        setSnackSev('success')
+        setSnackSev('warning')
         setSnackText('Item removed')
         setSnackOpen(true)
     }
 
     React.useEffect(() => {
-        //LOAD FRESH DATA
+        setLoadingTitle('Refreshing Data')
+        //setOpenLoad(true)
+
+        // getTableItemByRecordType(accessToken, "Catalog_Item").then(response => {
+        //     setCatalogList(response.getRecords)
+        //     setFiltered(response.getRecords)
+        //     setOpenLoad(false)
+        // })
+
     }, [])
 
     return (
@@ -160,7 +178,7 @@ function Main() {
             <Box>
                 <CssBaseline />
                 <Box sx={{flexGrow: 1}}>
-                    <AppBar position="fixed" sx={mode === 'light' ? {backgroundColor:'#eeeeee'} : {backgroundColor:'#212121'}} elevation={2}>
+                    <AppBar position="fixed" sx={mode === 'light' ? {backgroundColor:'#eeeeee'} : {backgroundColor:'#151515'}} elevation={2}>
                         <Toolbar>
                             <img
                                 src={logo}
@@ -261,7 +279,10 @@ function Main() {
                     </div>
                 }
             </Menu>
-            <Snackbar open={snackOpen} autoHideDuration={2000} onClose={snackClose}>
+            <Snackbar
+                open={snackOpen}
+                autoHideDuration={2000}
+                onClose={snackClose}>
                 {/*@ts-ignore*/}
                 <Alert onClose={snackClose} severity={snackSev} sx={{width: '100%'}}>
                     {snackText}

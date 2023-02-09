@@ -27,23 +27,23 @@ export const refreshLogin = async (userId, refreshToken) => {
     return response.status === 200 ? response.data : null;
 };
 
-export const getLocators = async (accessToken) => {
+export const getAppRoles = async (accessToken) => {
     const response = await axios.get(
-        '/startup-checklist/locators',
+        '/roles',
         {
             headers: {
                 'x-api-key': CONFIG.APP_API_KEY,
                 Authorization: accessToken,
             },
-            baseURL: BASE_URL
+            baseURL: BASE_URL,
         },
     );
-    return response?.data?.body ? JSON.parse(response.data.body) : response.data
+    return response?.data?.body ? JSON.parse(response.data.body) : response.data;
 }
 
 export const getTableItemByRecordType = async (accessToken, recordType) => {
     const response = await axios.get(
-        `/startup-checklist/${recordType}`,
+        `/smart-factory-catalog/${recordType}`,
         {
             headers: {
                 'x-api-key': CONFIG.APP_API_KEY,
@@ -57,7 +57,7 @@ export const getTableItemByRecordType = async (accessToken, recordType) => {
 
 export const createTableItem = async (accessToken, recordType, recordId, obj) => {
     const response = await axios.put(
-        `/startup-checklist/${recordType}`,
+        `/smart-factory-catalog/${recordType}`,
         {recordType, recordId, obj},
         {
             headers: {
@@ -72,7 +72,7 @@ export const createTableItem = async (accessToken, recordType, recordId, obj) =>
 
 export const deleteTableItem = async (accessToken, recordType, recordId) => {
     const response = await axios.delete(
-        `/startup-checklist/${recordType}/${recordId}`,
+        `/smart-factory-catalog/${recordType}/${recordId}`,
         {
             headers: {
                 'x-api-key': CONFIG.APP_API_KEY,
