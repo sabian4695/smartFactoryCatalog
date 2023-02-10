@@ -7,19 +7,29 @@ import ListItem from '@mui/material/ListItem';
 import InputLabel from "@mui/material/InputLabel";
 import Select, {SelectChangeEvent} from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
-import {departmentOptions, orgOptions, statusOptions} from "../global/DropDowns";
+import {departmentOptions, orgOptions, statusOptions, typeOptions, unitOptions} from "../global/DropDowns";
 import FormControl from "@mui/material/FormControl";
 import {filterDrawerOpen, snackBarOpen, snackBarSeverity, snackBarText} from '../global/recoilMain'
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import TuneIcon from '@mui/icons-material/Tune';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {catalogListAtom, filteredCatalog} from '../global/recoilTyped'
+import Checkbox from "@mui/material/Checkbox";
+import TextField from "@mui/material/TextField";
+import Autocomplete from "@mui/material/Autocomplete";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 export default function FilterDrawer() {
     const [openDrawer, setOpenDrawer] = useRecoilState(filterDrawerOpen)
     const [org, setOrg] = React.useState('')
     const [dept, setDept] = React.useState('')
     const [status, setStatus] = React.useState('')
+    const [types, setTypes] = React.useState<string[]>([])
+    const [units, setUnits] = React.useState<string[]>([])
     const setSnackText = useSetRecoilState(snackBarText);
     const setSnackSev = useSetRecoilState(snackBarSeverity);
     const setSnackOpen = useSetRecoilState(snackBarOpen);
@@ -37,14 +47,28 @@ export default function FilterDrawer() {
 
     function setFilter() {
         let filteredList = catalogList
-        if(org !== '') {
-            filteredList = filteredList.filter(x => x.org === org)
-        }
-        if(dept !== '') {
-            filteredList = filteredList.filter(x => x.department === dept)
+        if(types.length !== 0) {
+            for (let i = 0; i < types.length; i++) {
+                filteredList = filteredList.filter(x => {
+                    return (x.typeAvailable.map(y => types[i] === y)).includes(true)
+                })
+            }
         }
         if(status !== '') {
             filteredList = filteredList.filter(x => x.status === status)
+        }
+        if(org !== '') {
+            filteredList = filteredList.filter(x => x.org === org)
+        }
+        if(units.length !== 0) {
+            for (let i = 0; i < units.length; i++) {
+                filteredList = filteredList.filter(x => {
+                    return (x.unitAdoption.map(y => units[i] === y)).includes(true)
+                })
+            }
+        }
+        if(dept !== '') {
+            filteredList = filteredList.filter(x => x.department === dept)
         }
         setSnackSev('success')
         setSnackText('Filter applied')
@@ -72,6 +96,53 @@ export default function FilterDrawer() {
                 <Box sx={{width:300}}>
                     <List>
                         <ListItem>
+                            <Autocomplete
+                                multiple
+                                value={types}
+                                fullWidth
+                                onChange={(event, newValue) => {
+                                    setTypes([
+                                        ...newValue,
+                                    ]);
+                                }}
+                                id="checkboxes-tags-demo"
+                                options={typeOptions}
+                                disableCloseOnSelect
+                                getOptionLabel={(option) => option}
+                                renderOption={(props, option, { selected }) => (
+                                    <li {...props}>
+                                        <Checkbox
+                                            icon={icon}
+                                            checkedIcon={checkedIcon}
+                                            style={{ marginRight: 8 }}
+                                            checked={selected}
+                                        />
+                                        {option}
+                                    </li>
+                                )}
+                                renderInput={(params) => (
+                                    <TextField {...params} fullWidth label="Types Available" placeholder="Types" />
+                                )}
+                            />
+                        </ListItem>
+                        <ListItem>
+                            <FormControl fullWidth>
+                                <InputLabel>Status</InputLabel>
+                                <Select
+                                    value={status}
+                                    label="Status"
+                                    onChange={handleStatusChange}
+                                >
+                                    <MenuItem value="">
+                                        <em>None</em>
+                                    </MenuItem>
+                                    {statusOptions.map((x) => (
+                                        <MenuItem value={x} key={x}>{x}</MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </ListItem>
+                        <ListItem>
                             <FormControl fullWidth>
                                 <InputLabel>Org</InputLabel>
                                 <Select
@@ -89,6 +160,36 @@ export default function FilterDrawer() {
                             </FormControl>
                         </ListItem>
                         <ListItem>
+                            <Autocomplete
+                                multiple
+                                fullWidth
+                                value={units}
+                                onChange={(event, newValue) => {
+                                    setUnits([
+                                        ...newValue,
+                                    ]);
+                                }}
+                                id="checkboxes-tags-demo"
+                                options={unitOptions}
+                                disableCloseOnSelect
+                                getOptionLabel={(option) => option}
+                                renderOption={(props, option, { selected }) => (
+                                    <li {...props}>
+                                        <Checkbox
+                                            icon={icon}
+                                            checkedIcon={checkedIcon}
+                                            style={{ marginRight: 8 }}
+                                            checked={selected}
+                                        />
+                                        {option}
+                                    </li>
+                                )}
+                                renderInput={(params) => (
+                                    <TextField {...params} label="Unit Adoption" placeholder="Units" />
+                                )}
+                            />
+                        </ListItem>
+                        <ListItem>
                             <FormControl fullWidth>
                                 <InputLabel>Dept</InputLabel>
                                 <Select
@@ -100,23 +201,6 @@ export default function FilterDrawer() {
                                         <em>None</em>
                                     </MenuItem>
                                     {departmentOptions.map((x) => (
-                                        <MenuItem value={x} key={x}>{x}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        </ListItem>
-                        <ListItem>
-                            <FormControl fullWidth>
-                                <InputLabel>Status</InputLabel>
-                                <Select
-                                    value={status}
-                                    label="Status"
-                                    onChange={handleStatusChange}
-                                >
-                                    <MenuItem value="">
-                                        <em>None</em>
-                                    </MenuItem>
-                                    {statusOptions.map((x) => (
                                         <MenuItem value={x} key={x}>{x}</MenuItem>
                                     ))}
                                 </Select>
