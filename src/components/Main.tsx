@@ -26,7 +26,7 @@ import {
     refreshExpiryAtom,
     loggedInUserAtom,
     loadingMessageSelector,
-    loadingTitle, loadingOpen, areYouSure, areYouSureTitle, areYouSureDetails, areYouSureAccept
+    loadingTitle, loadingOpen, areYouSure, areYouSureTitle, areYouSureDetails, areYouSureAccept, userRole
 } from "./global/recoilMain";
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import FilterDrawer from "../components/modals/FilterDrawer";
@@ -42,8 +42,10 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
 import {cartItems, catalogListAtom, filteredCatalog} from './global/recoilTyped'
-import {getCatalogItems} from "./helpers/api";
-import {ListItem} from "@mui/material";
+import {getAppRoles, getCatalogItems} from "./helpers/api";
+import {ListItem, ListItemButton} from "@mui/material";
+import useMediaQuery from '@mui/material/useMediaQuery';
+import {deleteData, storeData} from "./helpers/storage";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -55,7 +57,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
 let defaultTheme: string
 if (localStorage.getItem('themeMode') !== null) {
     let def = localStorage.getItem('themeMode')
-    defaultTheme = def === null ? 'light' : def
+    defaultTheme = (def === null ? 'light' : def)
 } else {
     defaultTheme = 'light'
     localStorage.setItem('themeMode','light')
@@ -81,9 +83,11 @@ function Main() {
     const setCheckTitle = useSetRecoilState(areYouSureTitle);
     const setCheckDetails = useSetRecoilState(areYouSureDetails);
     const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
-    const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
+    const setCatalogList = useSetRecoilState(catalogListAtom)
+    const setUserRole = useSetRecoilState(userRole);
     const accessToken = useRecoilValue(accessTokenAtom)
-    const setFiltered = useSetRecoilState(filteredCatalog)
+    const [filtered, setFiltered] = useRecoilState(filteredCatalog)
+
     function setTheme() {
         if(mode === 'light') {
             setMode('dark')
@@ -111,6 +115,7 @@ function Main() {
             }
         }
     });
+    const notMobile = useMediaQuery(theme.breakpoints.up('sm'));
     React.useEffect(() => {
         if(!areYouSureOpen) {
             if(checkAccept) {
@@ -131,7 +136,9 @@ function Main() {
         setRefreshExpiry(null);
         setLoggedInUser(null);
         setLoggedInUser(null);
-        //setUserRole(null)
+        setUserRole('')
+        setCart([])
+        deleteData('cart')
         setLoadingMessage(null)
         setOpenLoad(false)
         setSnackSev('success')
@@ -154,8 +161,7 @@ function Main() {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const openMenu = Boolean(anchorEl);
     function removeCartItem(id: string) {
-        //@ts-ignore
-        let newArray = cart.filter(function(el) { return el.id !== id; });
+        let newArray = cart.filter(function(x) { return x.id !== id; });
         setCart(newArray);
         setSnackSev('warning')
         setSnackText('Item removed')
@@ -171,8 +177,20 @@ function Main() {
             setFiltered(response.catalogs)
             setOpenLoad(false)
         })
-
+        getAppRoles(accessToken).then(response => {
+            if(response.roles[0] === '554a0a44-5674-4704-9bf5-54915a647103') {
+                setUserRole('admin')
+            } else if(response.roles[0] === '7c026fb3-514c-4911-b047-b7c5193ab0ca') {
+                setUserRole('viewer')
+            } else(
+                setUserRole('')
+            )
+        })
     }, [])
+
+    React.useEffect(() => {
+        storeData('cart',JSON.stringify(cart))
+    }, [cart])
 
     return (
         <ThemeProvider theme={theme}>
@@ -223,10 +241,6 @@ function Main() {
                 </Box>
             </Box>
             <Menu
-                id="long-menu"
-                MenuListProps={{
-                    'aria-labelledby': 'long-button',
-                }}
                 anchorEl={anchorEl}
                 anchorOrigin={{
                     vertical: 'bottom',
@@ -242,7 +256,7 @@ function Main() {
                     style: {
                         maxHeight: 500,
                         minWidth: 300,
-                        maxWidth: 500
+                        maxWidth: 350
                     },
                 }}
             >
@@ -257,30 +271,31 @@ function Main() {
                         </Typography>
                     </Box>
                     :
-                    <Box key={'2'}>
+                    <Box>
                         <Typography sx={{ml:1}} fontWeight='bold' color='text.secondary' variant='subtitle2'>
                             Cart
                         </Typography>
-                        {cart.map((option) => (
-                            <>
-                                <Tooltip title='Click to Remove' arrow>
-                                    {/*@ts-ignore*/}
-                                    <MenuItem key={option.id} onClick={() => removeCartItem(option.id)}>
-                                        {/*@ts-ignore*/}
-                                        <ListItemText>{option.title}</ListItemText>
-                                        <ListItemIcon sx={{ml:2, mr:-2}}>
-                                            <DeleteIcon/>
-                                        </ListItemIcon>
-                                    </MenuItem>
-                                </Tooltip>
-                            </>
-                        ))}
-                        <ListItem disablePadding sx={{mt:1}}>
+                        <Tooltip title='Click to Remove' arrow placement='top'>
+                            <Box>
+                                {cart.map((option) => (
+                                        <ListItem disablePadding key={option.id} onClick={() => removeCartItem(option.id)}>
+                                            <ListItemButton>
+                                                <ListItemText>
+                                                    {option.title}
+                                                </ListItemText>
+                                                <ListItemIcon sx={{mr:-4}}>
+                                                    <DeleteIcon/>
+                                                </ListItemIcon>
+                                            </ListItemButton>
+                                        </ListItem>
+                                ))}
+                            </Box>
+                        </Tooltip>
+                        <ListItem disablePadding sx={{mt:1}} key={'4'}>
                             <Tooltip title='Informs Smart Factory team that you are interested in what you have selected!' arrow>
                                 <Button
                                     sx={{mx:1}}
                                     fullWidth
-                                    key={'1'}
                                     variant='contained'
                                     disableElevation color='secondary' size='small'
                                 >
@@ -294,7 +309,9 @@ function Main() {
             <Snackbar
                 open={snackOpen}
                 autoHideDuration={2000}
-                onClose={snackClose}>
+                onClose={snackClose}
+                sx={notMobile ? undefined : {mb:8}}
+            >
                 {/*@ts-ignore*/}
                 <Alert onClose={snackClose} severity={snackSev} sx={{width: '100%'}}>
                     {snackText}

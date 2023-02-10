@@ -2,12 +2,19 @@ import React from 'react'
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
-import {catalogListAtom, cartItems} from "./global/recoilTyped";
+import {catalogListAtom, cartItems, cartItem} from "./global/recoilTyped";
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {categoryItem, categoryOpen, snackBarOpen, snackBarSeverity, snackBarText} from "./global/recoilMain";
+import {
+    accessTokenAtom,
+    categoryItem,
+    categoryOpen,
+    snackBarOpen,
+    snackBarSeverity,
+    snackBarText
+} from "./global/recoilMain";
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import Box from '@mui/material/Box';
@@ -17,6 +24,7 @@ import IconButton from "@mui/material/IconButton";
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import DoneIcon from '@mui/icons-material/Done';
 import Icon from '@mui/material/Icon';
+import {getUploadUrl} from "./helpers/api";
 
 export default function CatalogItem({sfItemID}: { sfItemID: any }) {
     const catalogList = useRecoilValue(catalogListAtom)
@@ -27,6 +35,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
     const setSnackText = useSetRecoilState(snackBarText);
     const setSnackSev = useSetRecoilState(snackBarSeverity);
     const setSnackOpen = useSetRecoilState(snackBarOpen);
+    const accessToken = useRecoilValue(accessTokenAtom)
     function openItem() {
         setItemDetails(sfItemID)
         setOpenModal(true)
@@ -38,8 +47,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
             setSnackOpen(true)
             return
         }
-
-        let newItem = {
+        let newItem: cartItem = {
             id: sfItemID,
             title: currentItem === undefined ? '' : currentItem.title
         }
@@ -48,11 +56,23 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
         setSnackText('Item added to cart')
         setSnackOpen(true)
     }
+    async function getImage(id: string | undefined) {
+        if (id === undefined) {
+            return ''
+        }
+        if(id !== 'c42b5e1e-9413-493d-bfdf-98fe8635aa64') {
+            return ''
+        }
+        let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','GET')
+        console.log(imageURL)
+        return String(imageURL)
+    }
+
     return (
         <>
             <Grow in={true}>
                 <Box component='div' sx={{position:'relative'}}>
-                    <Paper sx={{ width: 345 }} elevation={3}>
+                    <Paper sx={{ width: 345, borderRadius:2 }} elevation={3}>
                         {currentItem?.webLink === '' ? null :
                             <Tooltip title="Open website" arrow>
                                 <Button
@@ -87,7 +107,8 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                         }
                         <CardMedia
                             sx={{ height: 200 }}
-                            image={currentItem?.imgURL}
+                            //@ts-ignore
+                            //src={getImage(currentItem?.recordId)}
                             component='img'
                             title={currentItem?.title}
                             alt={currentItem?.title}
@@ -110,7 +131,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                                 <Tooltip title="Software Available" arrow>
                                     <Box>
                                         {currentItem?.typeAvailable.map(x => (
-                                            <Chip label={x} size='small' sx={{mr:0.5, mb:0.5}}/>
+                                            <Chip label={x} size='small' sx={{mr:0.5, mb:0.5}} key={x}/>
                                         ))}
                                     </Box>
                                 </Tooltip>

@@ -216,13 +216,6 @@ const Login = () => {
             setLoggedInUser(authData.user);
             setUsernameValue('');
             setPasswordValue('');
-
-            getAppRoles(accessToken).then(response => {
-                console.log('USER ROLE RESPONSE: ' + response)
-                setUserRole(response)
-                setLoadingMessage(null)
-            })
-
         } catch (e) {
             setLoginError(true);
             console.error('login error ->', e);

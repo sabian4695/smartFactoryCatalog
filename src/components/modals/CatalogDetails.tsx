@@ -8,7 +8,7 @@ import {
     editCategoryOpen,
     snackBarText,
     snackBarSeverity,
-    snackBarOpen, accessTokenAtom, loadingTitle, loadingOpen
+    snackBarOpen, accessTokenAtom, loadingTitle, loadingOpen, userRole
 } from '../global/recoilMain'
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {catalogListAtom, filteredCatalog, cartItems, cartItem} from '../global/recoilTyped'
@@ -27,7 +27,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {areYouSure, areYouSureDetails, areYouSureTitle, areYouSureAccept} from "../global/recoilMain";
 import Tooltip from '@mui/material/Tooltip';
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import {deleteTableItem} from "../helpers/api";
+import {deleteTableItem, getUploadUrl} from "../helpers/api";
+import {storeData} from "../helpers/storage";
 
 export default function CatalogDetails() {
     const [openModal, setOpenModal] = useRecoilState(categoryOpen)
@@ -50,6 +51,7 @@ export default function CatalogDetails() {
     const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
     const setFiltered = useSetRecoilState(filteredCatalog)
     const [cart, setCart] = useRecoilState(cartItems)
+    const userRoleName = useRecoilValue(userRole)
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -76,11 +78,18 @@ export default function CatalogDetails() {
     }, [areYouSureOpen])
     async function handleDelete() {
         if (!itemDelete) {return}
-
+        if(userRoleName !== 'admin') {
+            setSnackSev('error')
+            setSnackText('Must be admin to do this')
+            setSnackOpen(true)
+            return
+        }
         setLoadingTitle('Deleting item')
         setOpenLoad(true)
 
-        deleteTableItem(accessToken, itemID).then(() => {
+        await getUploadUrl(accessToken,itemID,'image/jpeg','DELETE')
+
+        await deleteTableItem(accessToken, itemID).then(() => {
             let newArray = catalogList.filter(function(el) { return el.recordId !== itemID; });
             setCatalogList(newArray);
             setFiltered(newArray)
@@ -93,6 +102,7 @@ export default function CatalogDetails() {
             setOpenLoad(false)
         })
     }
+
     function addToCart() {
         if (cart.find(x => x.id === itemID)) {
             setSnackSev('error')
@@ -117,19 +127,22 @@ export default function CatalogDetails() {
                 scroll='body'
             >
                 <DialogTitle sx={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-                    <Tooltip title="Options" arrow>
-                        <IconButton
-                            size='small'
-                            aria-label="more"
-                            aria-controls={moreOpen ? 'long-menu' : undefined}
-                            aria-expanded={moreOpen ? 'true' : undefined}
-                            aria-haspopup="true"
-                            onClick={handleClick}
-                            sx={{mr:0.5, ml:-1}}
-                        >
-                            <MoreVertIcon/>
-                        </IconButton>
-                    </Tooltip>
+                    {userRoleName === 'admin' ?
+                        <Tooltip title="Options" arrow>
+                            <IconButton
+                                size='small'
+                                aria-label="more"
+                                aria-controls={moreOpen ? 'long-menu' : undefined}
+                                aria-expanded={moreOpen ? 'true' : undefined}
+                                aria-haspopup="true"
+                                onClick={handleClick}
+                                sx={{mr:0.5, ml:-1}}
+                            >
+                                <MoreVertIcon/>
+                            </IconButton>
+                        </Tooltip>
+                        : null
+                    }
                     <div style={{flexGrow:'1'}}>
                         {currentItem?.title}
                     </div>
@@ -143,7 +156,7 @@ export default function CatalogDetails() {
                         <Tooltip title="Software Available" arrow>
                             <Box>
                                 {currentItem?.typeAvailable.map(x => (
-                                    <Chip label={x} size='small' sx={{mr:0.5, mb:0.5}}/>
+                                    <Chip label={x} size='small' sx={{mr:0.5, mb:0.5}} key={x}/>
                                 ))}
                             </Box>
                         </Tooltip>

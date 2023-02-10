@@ -85,9 +85,9 @@ export const deleteTableItem = async (accessToken, catalogId) => {
     return response?.data?.body ? JSON.parse(response?.data?.body) : response?.data;
 };
 
-export const getUploadUrl = async (accessToken, catalogId, type, action) => { //action = PUT or GET, //type = filetype i.e.
+export const getUploadUrl = async (accessToken, catalogId, type, action) => {
     const response = await axios.get(
-        `/smart-factory-catalog/${catalogId}/photoUrl `,
+        `/smart-factory-catalog/${catalogId}/photoUrl`,
         {
             headers: {
                 'x-api-key': CONFIG.APP_API_KEY,
@@ -103,4 +103,9 @@ export const getUploadUrl = async (accessToken, catalogId, type, action) => { //
     if (response.status !== 200) return;
     const data = response?.data?.body ? JSON.parse(response.data.body) : response.data;
     return data.url;
+};
+
+export const uploadAttachedDocument = async (url, fileData, fileType) => {
+    const response = await axios.put(url, fileData, {headers: {'Content-Type': fileType}});
+    return response.status === 200 ? response.data : null;
 };

@@ -1,4 +1,6 @@
 import {atom} from 'recoil'
+import {getDataString} from "../helpers/storage";
+import {loggingEffect, saveToStorageEffect} from "../helpers/misc";
 
 export interface itemType {
     recordId: string,
@@ -22,9 +24,15 @@ export interface cartItem {
     title: string,
 }
 
+let defaultCart: cartItem[] = []
+let localCart = getDataString('cart')
+if (localCart !== null) {
+    defaultCart = JSON.parse(localCart)
+}
+
 export const cartItems = atom({
     key: "cartItems",
-    default: [] as cartItem[],
+    default: defaultCart,
 });
 
 const list: itemType[]  = []

@@ -6,7 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import {useSetRecoilState, useRecoilState, useRecoilValue} from "recoil";
-import {accessTokenAtom, addCategoryOpen, loadingOpen, loadingTitle} from "../global/recoilMain";
+import {accessTokenAtom, addCategoryOpen, loadingOpen, loadingTitle, userRole} from "../global/recoilMain";
 import Grid from '@mui/material/Unstable_Grid2';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
@@ -27,7 +27,12 @@ import dayjs, {Dayjs} from "dayjs";
 import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
-import {createTableItem} from "../helpers/api";
+import {createTableItem, getUploadUrl, uploadAttachedDocument} from "../helpers/api";
+import Grow from '@mui/material/Grow';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import PhotoIcon from '@mui/icons-material/Photo';
+import DeleteIcon from '@mui/icons-material/Delete';
+import {readFileData} from "../helpers/misc";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -38,6 +43,7 @@ export default function AddCatalogItem() {
     const [title, setTitle] = React.useState('')
     const [status, setStatus] = React.useState<string | null>(null);
     const [image, setImage] = React.useState('')
+    const [imageCust, setImageCust] = React.useState<any>(null)
     const [webLink, setWebLink] = React.useState('')
     const [reportLink, setReportLink] = React.useState('')
     const [description, setDescription] = React.useState('')
@@ -55,8 +61,14 @@ export default function AddCatalogItem() {
     const setSnackOpen = useSetRecoilState(snackBarOpen);
     const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
     const setFiltered = useSetRecoilState(filteredCatalog)
+    const userRoleName = useRecoilValue(userRole)
+    let Buffer = require('buffer/').Buffer
 
     const verifyInputs = () => {
+        if(userRoleName !== 'admin') {
+            setErrorText('Must be admin to do this')
+            return false
+        }
         if (title === '' || title === null) {
             setErrorText('Please enter a Long Title')
             return false
@@ -80,6 +92,25 @@ export default function AddCatalogItem() {
         return true
     }
 
+    async function handleUploadPhoto(id: string) {
+        let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','PUT')
+        let fileData = String(readFileData(imageCust))
+        fileData = fileData.replace('data:image/jpeg;base64,', '')
+        await uploadAttachedDocument(imageURL,Buffer(fileData, 'base64'),'image/jpeg').then(() => {
+            setOpenModal(false)
+            setErrorText('')
+            setSnackSev('success')
+            setSnackText('Item Added!')
+            setSnackOpen(true)
+            setOpenLoad(false)
+        }).catch((reason) => {
+            setErrorText(reason.name)
+            setSnackSev('error')
+            setSnackText(reason.name)
+            setSnackOpen(true)
+        })
+    }
+
     async function handleSubmit(event: any) {
         event.preventDefault()
         setErrorText('')
@@ -89,7 +120,7 @@ export default function AddCatalogItem() {
             let newItem: itemType = {
                 title: title,
                 status: status === null ? '' : status,
-                imgURL: image,
+                imgURL: imageCust === null ? '' : 'exists',
                 webLink: webLink,
                 reportLink: reportLink,
                 description: description,
@@ -104,23 +135,43 @@ export default function AddCatalogItem() {
             }
 
             createTableItem(accessToken, newItem.recordId, newItem).then(() => {
-
-                //PUT IMAGE IN S3 BUCKET
-
+                if(imageCust !== null) {
+                    handleUploadPhoto(newItem.recordId)
+                } else {
+                    setOpenModal(false)
+                    setErrorText('')
+                    setSnackSev('success')
+                    setSnackText('Item Added!')
+                    setSnackOpen(true)
+                    setOpenLoad(false)
+                }
                 if(catalogList.length === 0) {
                     setCatalogList([newItem])
                 } else {
                     setCatalogList((prevState: any) => [...prevState, newItem]);
                 }
-                setOpenModal(false)
-                setErrorText('')
-                setSnackSev('success')
-                setSnackText('Item Added!')
+            }).catch((reason) => {
+                setErrorText(reason.name)
+                setSnackSev('error')
+                setSnackText(reason.name)
                 setSnackOpen(true)
-                setOpenLoad(false)
             })
         }
     }
+
+    function handleImagePick(event: any) {
+        setImageCust(event.target.files[0])
+    }
+
+    function openImage() {
+        window.open(URL.createObjectURL(imageCust), '_blank');
+    }
+
+    function removeImage() {
+        setImage('')
+        setImageCust(null)
+    }
+
 
     React.useEffect(() => {
         setFiltered(catalogList)
@@ -140,6 +191,7 @@ export default function AddCatalogItem() {
         setType([])
         setDept(null)
         setReleaseDate(null)
+        setImageCust(null)
         setErrorText('')
     }, [openModal])
     return(
@@ -147,6 +199,7 @@ export default function AddCatalogItem() {
             <Dialog
                 open={openModal}
                 onClose={() => setOpenModal(false)}
+                scroll='paper'
             >
                 <DialogTitle sx={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
                     Add New Catalog Item
@@ -156,60 +209,38 @@ export default function AddCatalogItem() {
                 </DialogTitle>
                 <Box component='form'
                      onSubmit={handleSubmit}>
-                <DialogContent sx={{px:3,py:1}}>
+                    <DialogContent sx={{px:3,py:1}}>
                         <Grid container spacing={2}>
                             <Grid xs={12}>
                                 <TextField
                                     required
-                                    autoFocus
                                     value={title}
                                     onChange={(event: any) => setTitle(event.target.value)}
                                     label='Long Title'
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid xs={12} sm={6}>
-                                <Autocomplete
-                                    value={status}
-                                    onChange={(event: any, newValue: string | null) => {
-                                        setStatus(newValue);
-                                    }}
-                                    options={statusOptions}
-                                    renderInput={(params) => <TextField {...params} label="Status" required />}
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid xs='auto' sx={{display: 'flex', flexGrow: '1'}}>
-                                <Tooltip title='JPG files only' arrow>
-                                    <Button variant="contained" component="label" fullWidth color='secondary' disableElevation>
-                                        Upload Image (jpg)
-                                        <input
-                                            value={image}
-                                            onChange={(event: any) => setImage(event.target.value)}
-                                            hidden
-                                            accept="image/jpg"
-                                            type="file"
-                                        />
-                                    </Button>
-                                </Tooltip>
-                            </Grid>
-                            <Grid xs={12} sm={6}>
+                            <Grid xs={12}>
                                 <TextField
-                                    value={webLink}
-                                    onChange={(event: any) => setWebLink(event.target.value)}
-                                    label='Web Link'
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid xs={12} sm={6}>
-                                <TextField
-                                    value={reportLink}
-                                    onChange={(event: any) => setReportLink(event.target.value)}
-                                    label='Report Link'
+                                    required
+                                    value={description}
+                                    onChange={(event: any) => setDescription(event.target.value)}
+                                    label='Short Description'
                                     fullWidth
                                 />
                             </Grid>
                             <Grid xs={12}>
+                                <TextField
+                                    required
+                                    value={details}
+                                    onChange={(event: any) => setDetails(event.target.value)}
+                                    label='More Details'
+                                    fullWidth
+                                    multiline
+                                    rows={2}
+                                />
+                            </Grid>
+                            <Grid xs={12} sm={7}>
                                 <Autocomplete
                                     multiple
                                     value={type}
@@ -238,25 +269,100 @@ export default function AddCatalogItem() {
                                     )}
                                 />
                             </Grid>
-                            <Grid xs={12}>
-                                <TextField
-                                    required
-                                    value={description}
-                                    onChange={(event: any) => setDescription(event.target.value)}
-                                    label='Short Description'
+                            <Grid xs={12} sm={5}>
+                                <Autocomplete
+                                    value={status}
+                                    onChange={(event: any, newValue: string | null) => {
+                                        setStatus(newValue);
+                                    }}
+                                    options={statusOptions}
+                                    renderInput={(params) => <TextField {...params} label="Status" required />}
                                     fullWidth
                                 />
                             </Grid>
-                            <Grid xs={12}>
+                            <Grid xs={12} sm={4}>
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DatePicker
+                                        closeOnSelect
+                                        label="Release Date"
+                                        value={releaseDate}
+                                        onChange={(newValue) => {
+                                            setReleaseDate(newValue);
+                                        }}
+                                        renderInput={(params) => <TextField {...params} fullWidth/>}
+                                        componentsProps={{
+                                            actionBar: {
+                                                actions: ['today'],
+                                            },
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            </Grid>
+                            <Grid xs={12} sm={4}>
                                 <TextField
-                                    required
-                                    value={details}
-                                    onChange={(event: any) => setDetails(event.target.value)}
-                                    label='More Details'
+                                    value={webLink}
+                                    onChange={(event: any) => setWebLink(event.target.value)}
+                                    label='Web Link'
                                     fullWidth
-                                    multiline
-                                    rows={2}
                                 />
+                            </Grid>
+                            <Grid xs={12} sm={4}>
+                                <TextField
+                                    value={reportLink}
+                                    onChange={(event: any) => setReportLink(event.target.value)}
+                                    label='Report Link'
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={12} sm={5}>
+                                <Autocomplete
+                                    value={org}
+                                    onChange={(event: any, newValue: string | null) => {
+                                        setOrg(newValue);
+                                    }}
+                                    options={orgOptions}
+                                    renderInput={(params) => <TextField {...params} label="Org" />}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={8} sm={5} display='flex'>
+                                <Tooltip title='JPG files only' arrow>
+                                    <Button
+                                        variant="contained"
+                                        component="label"
+                                        fullWidth
+                                        color='secondary'
+                                        disableElevation
+                                        startIcon={<AddPhotoAlternateIcon/>}
+                                    >
+                                        Upload Image (jpg)
+                                        <input
+                                            value={image}
+                                            onChange={handleImagePick}
+                                            hidden
+                                            accept="image/jpeg"
+                                            type="file"
+                                        />
+                                    </Button>
+                                </Tooltip>
+                            </Grid>
+                            <Grid xs={2} sm={1} alignSelf='center'>
+                                <Grow in={true} timeout={300}>
+                                    <Tooltip title='View Image' arrow>
+                                        <IconButton onClick={openImage} size='small' disabled={!imageCust}>
+                                            <PhotoIcon/>
+                                        </IconButton>
+                                    </Tooltip>
+                                </Grow>
+                            </Grid>
+                            <Grid xs={2} sm={1} alignSelf='center'>
+                                <Grow in={true} timeout={500}>
+                                    <Tooltip title='Remove Image' arrow>
+                                        <IconButton onClick={removeImage} size='small' disabled={!imageCust}>
+                                            <DeleteIcon/>
+                                        </IconButton>
+                                    </Tooltip>
+                                </Grow>
                             </Grid>
                             <Grid xs={12} sm={6}>
                                 <Autocomplete
@@ -288,35 +394,6 @@ export default function AddCatalogItem() {
                                 />
                             </Grid>
                             <Grid xs={12} sm={6}>
-                                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <DatePicker
-                                        closeOnSelect
-                                        label="Release Date"
-                                        value={releaseDate}
-                                        onChange={(newValue) => {
-                                            setReleaseDate(newValue);
-                                        }}
-                                        renderInput={(params) => <TextField {...params} fullWidth/>}
-                                        componentsProps={{
-                                            actionBar: {
-                                                actions: ['today'],
-                                            },
-                                        }}
-                                    />
-                                </LocalizationProvider>
-                            </Grid>
-                            <Grid xs={12} sm={6}>
-                                <Autocomplete
-                                    value={org}
-                                    onChange={(event: any, newValue: string | null) => {
-                                        setOrg(newValue);
-                                    }}
-                                    options={orgOptions}
-                                    renderInput={(params) => <TextField {...params} label="Org" />}
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid xs={12} sm={6}>
                                 <Autocomplete
                                     value={dept}
                                     onChange={(event: any, newValue: string | null) => {
@@ -328,7 +405,7 @@ export default function AddCatalogItem() {
                                 />
                             </Grid>
                         </Grid>
-                </DialogContent>
+                    </DialogContent>
                 <Box sx={{mx:1, mt:0.5}}><Typography color='error'>{errorText}</Typography></Box>
                 <DialogActions>
                     <Button fullWidth variant='contained' type='submit' startIcon={<AddIcon />} sx={{color: "#FFFFFF"}}>
