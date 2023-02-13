@@ -22,7 +22,7 @@ import Checkbox from "@mui/material/Checkbox";
 import Typography from "@mui/material/Typography";
 import DialogActions from "@mui/material/DialogActions";
 import Dialog from "@mui/material/Dialog";
-import {catalogListAtom, filteredCatalog} from "../global/recoilTyped";
+import {catalogListAtom, filteredCatalog, imgData, imgItem} from "../global/recoilTyped";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import SaveIcon from '@mui/icons-material/Save';
@@ -68,6 +68,7 @@ export default function EditCatalogItem() {
     const setLoadingTitle = useSetRecoilState(loadingTitle);
     const setOpenLoad = useSetRecoilState(loadingOpen);
     const userRoleName = useRecoilValue(userRole)
+    const [imageData, setImageData] = useRecoilState(imgData);
     let Buffer = require('buffer/').Buffer
     const [imageCust, setImageCust] = React.useState<any>(null)
 
@@ -101,10 +102,29 @@ export default function EditCatalogItem() {
 
     async function handleUploadPhoto(id: string) {
         let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','PUT')
-        let fileData = await readFileData(imageCust)
+        let fileDatainit = await readFileData(imageCust)
 
-        fileData = fileData.replace('data:image/jpeg;base64,', '')
+        let fileData = fileDatainit.replace('data:image/jpeg;base64,', '')
         await uploadAttachedDocument(imageURL,Buffer(fileData, 'base64'),'image/jpeg').then(() => {
+
+            let newArray: imgItem[]
+            if (imageData.length === 0) { //if array is empty
+                newArray = [{id: id, img: fileDatainit}]
+                setImageData(newArray)
+            } else if(imageData.find(x => x.id === id)){ //if item is already in array
+                newArray = imageData.map(obj => {
+                    if (obj.id === id) {
+                        return {...obj,
+                            img: fileDatainit
+                        }
+                    }
+                    return obj;
+                })
+                setImageData(newArray)
+            } else { //if item is not in array
+                setImageData((prevState: any) => [...prevState, {id: id, img: fileDatainit}])
+            }
+
             setOpenModal(false)
             setErrorText('')
             setSnackSev('success')

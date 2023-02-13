@@ -53,10 +53,11 @@ export const filteredCatalog = atom({
 
 let defaultImgData: imgItem[] = []
 let localImg = getSessionData('imgData')
-if (localImg !== null || true) {
+if (localImg !== null && localImg !== undefined) {
     //@ts-ignore
     defaultImgData = JSON.parse(localImg)
 }
+
 
 export const imgData = atom({
     key: "imgData",

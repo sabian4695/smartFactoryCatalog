@@ -124,3 +124,17 @@ export const uploadAttachedDocument = async (url, fileData, fileType) => {
     const response = await axios.put(url, fileData, {headers: {'Content-Type': fileType}});
     return response.status === 200 ? response.data : null;
 };
+
+export const getUserInfo = async (accessToken, userId) => {
+    const response = await axios.get(
+        `/smart-factory-catalog/user/${userId}`,
+        {
+            headers: {
+                'x-api-key': CONFIG.APP_API_KEY,
+                Authorization: accessToken,
+            },
+            baseURL: BASE_URL
+        },
+    );
+    return response?.data?.body ? JSON.parse(response?.data) : response?.data
+}

@@ -41,10 +41,12 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
 import {cartItems, catalogListAtom, filteredCatalog, imgData, imgItem} from './global/recoilTyped'
-import {getAppRoles, getCatalogItems, getUploadUrl} from "./helpers/api";
+import {getAppRoles, getCatalogItems, getUploadUrl, getUserInfo} from "./helpers/api";
 import {ListItem, ListItemButton} from "@mui/material";
 import useMediaQuery from '@mui/material/useMediaQuery';
-import {deleteData, storeData, storeSessionData} from "./helpers/storage";
+import {deleteData, getDataString, storeData, storeSessionData} from "./helpers/storage";
+import {getBase64FromUrl, resizeImage} from "./helpers/misc";
+import {createEmailBody} from "./helpers/emailTemplate";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -69,7 +71,7 @@ function Main() {
     const [snackOpen, setSnackOpen] = useRecoilState(snackBarOpen);
     const [snackText, setSnackText] = useRecoilState(snackBarText);
     const setAccessToken = useSetRecoilState(accessTokenAtom);
-    const setUserId = useSetRecoilState(userIdAtom);
+    const [userId, setUserId] = useRecoilState(userIdAtom);
     const setRefreshToken = useSetRecoilState(refreshTokenAtom);
     const setAccessExpiry = useSetRecoilState(accessExpiryAtom);
     const setRefreshExpiry = useSetRecoilState(refreshExpiryAtom);
@@ -141,9 +143,6 @@ function Main() {
         deleteData('cart')
         setLoadingMessage(null)
         setOpenLoad(false)
-        setSnackSev('success')
-        setSnackText('Logged Out')
-        setSnackOpen(true)
         setCheckAccept(false)
         setLogout(false)
     }
@@ -167,42 +166,32 @@ function Main() {
         setSnackText('Item removed')
         setSnackOpen(true)
     }
-
-    const getBase64FromUrl = async (url: string) => {
-        const data = await fetch(url);
-        const blob = await data.blob();
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => {
-                const base64data = reader.result;
-                resolve(base64data);
-            }
-        });
-    }
-
+    let first = 0
     async function pullImage(id: string) {
-        if(imageData.find(x => x.id === id)) {
-            return
-        }
+
+
+        if(imageData.find(x => x.id === id)) {return}
         let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','GET')
         //@ts-ignore
         let image: string = await getBase64FromUrl(imageURL)
-        let newArray: imgItem[]
-        if (imageData.length === 0) {
-            newArray = [{id: id, img: image}]
-        } else {
-            newArray = imageData.map(obj => {
+        let resized: string = await resizeImage(image, 500, 500)
+
+        if (first === 0) { //if array is empty
+            first = 1
+            setImageData([{id: id, img: resized}])
+        } else if(imageData.find(x => x.id === id)) { //if item is already in array
+            let newArray: imgItem[] = imageData.map(obj => {
                 if (obj.id === id) {
                     return {...obj,
-                        img: image
+                        img: resized
                     }
                 }
                 return obj;
             })
+            setImageData(newArray)
+        } else { //if item is not in array
+            setImageData((prevState: any) => [...prevState, {id:id, img: resized}])
         }
-
-        setImageData(newArray)
     }
 
     React.useEffect(() => {
@@ -210,9 +199,9 @@ function Main() {
         setOpenLoad(true)
 
         getCatalogItems(accessToken).then(response => {
-            response.catalogs.forEach((x: any) => {
+            response.catalogs.forEach(async (x: any) => {
                 if(x.imgURL === 'exists') {
-                   pullImage(x.recordId)
+                   await pullImage(x.recordId).then()
                 }
             })
 
@@ -235,13 +224,29 @@ function Main() {
         storeData('cart',JSON.stringify(cart))
     }, [cart])
     React.useEffect(() => {
-        storeSessionData('imgData',JSON.stringify(imageData))
+        //storeSessionData('imgData',JSON.stringify(imageData))
     }, [imageData])
 
-    function handleSendCart() {
+    async function handleSendCart() {
+        setLoadingTitle('Sending Cart')
+        setOpenLoad(true)
+
+        // await getUserInfo(accessToken, userId).then(response => {
+        //     console.log(response)
+        // })
+
+        let emailText: string = createEmailBody(getDataString('loggedInUser'),cart.map(x => x.title))
+
+        let cartArr = ''
+        cart.forEach(x => cartArr = cartArr + encodeURIComponent(x.title + '\n'))
+
+        window.location.href = 'mailto: support@nifco.zendesk.com&subject=' + encodeURIComponent('Smart Factory Catalog Information Request') +
+            //@ts-ignore
+            '&body=' + encodeURIComponent(getDataString('loggedInUser')) + encodeURIComponent(' requested information regarding the following Smart Factory Catalog Items\n') +
+            + cartArr
 
         //send cart
-
+        setOpenLoad(false)
         setSnackSev('success')
         setSnackText('Cart sent to Smart Factory Team')
         setSnackOpen(true)
@@ -355,7 +360,7 @@ function Main() {
                                     disableElevation color='secondary' size='small'
                                     onClick={handleSendCart}
                                 >
-                                    Send Cart
+                                    Send Cart to Team
                                 </Button>
                             </Tooltip>
                         </ListItem>

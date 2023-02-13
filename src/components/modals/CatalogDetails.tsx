@@ -122,7 +122,11 @@ export default function CatalogDetails() {
     function getPhoto(): string{
         if (currentItem?.imgURL !== '') {
             let result = imageData.find(x => x.id === currentItem?.recordId)?.img
-            return result === undefined ? '' : result
+            if (result === null || result === undefined) {
+                return ''
+            } else {
+                return result
+            }
         } else {
             return ''
         }

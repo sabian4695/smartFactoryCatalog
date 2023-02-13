@@ -77,13 +77,16 @@ export default function FilterDrawer() {
         setOpenDrawer(false)
     }
     function clearFilter() {
+        setTypes([])
+        setStatus('')
+        setOrg('')
+        setUnits([])
+        setDept('')
+        setFiltered(catalogList)
+
         setSnackSev('info')
         setSnackText('Filter cleared')
         setSnackOpen(true)
-        setOrg('')
-        setDept('')
-        setStatus('')
-        setFiltered(catalogList)
         setOpenDrawer(false)
     }
     return(

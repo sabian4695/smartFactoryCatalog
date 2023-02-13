@@ -70,7 +70,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                 <Box component='div' sx={{position:'relative'}}>
                     <Paper sx={{ width: 345, borderRadius:2 }} elevation={3}>
                         {currentItem?.webLink === '' ? null :
-                            <Tooltip title="Open website" arrow>
+                            <Tooltip title="Open Website" arrow>
                                 <Button
                                     size="small"
                                     variant='contained'
