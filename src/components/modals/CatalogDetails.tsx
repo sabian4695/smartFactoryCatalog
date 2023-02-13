@@ -11,7 +11,7 @@ import {
     snackBarOpen, accessTokenAtom, loadingTitle, loadingOpen, userRole
 } from '../global/recoilMain'
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import {catalogListAtom, filteredCatalog, cartItems, cartItem} from '../global/recoilTyped'
+import {catalogListAtom, filteredCatalog, cartItems, cartItem, imgData} from '../global/recoilTyped'
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Typography from "@mui/material/Typography";
@@ -27,8 +27,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import {areYouSure, areYouSureDetails, areYouSureTitle, areYouSureAccept} from "../global/recoilMain";
 import Tooltip from '@mui/material/Tooltip';
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import {deleteTableItem, getUploadUrl} from "../helpers/api";
-import {storeData} from "../helpers/storage";
+import {deletePhoto, deleteTableItem} from "../helpers/api";
 
 export default function CatalogDetails() {
     const [openModal, setOpenModal] = useRecoilState(categoryOpen)
@@ -51,6 +50,7 @@ export default function CatalogDetails() {
     const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
     const setFiltered = useSetRecoilState(filteredCatalog)
     const [cart, setCart] = useRecoilState(cartItems)
+    const imageData = useRecoilValue(imgData);
     const userRoleName = useRecoilValue(userRole)
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -87,7 +87,7 @@ export default function CatalogDetails() {
         setLoadingTitle('Deleting item')
         setOpenLoad(true)
 
-        await getUploadUrl(accessToken,itemID,'image/jpeg','DELETE')
+        await deletePhoto(accessToken,itemID)
 
         await deleteTableItem(accessToken, itemID).then(() => {
             let newArray = catalogList.filter(function(el) { return el.recordId !== itemID; });
@@ -119,6 +119,15 @@ export default function CatalogDetails() {
         setSnackText('Item added to cart')
         setSnackOpen(true)
     }
+    function getPhoto(): string{
+        if (currentItem?.imgURL !== '') {
+            let result = imageData.find(x => x.id === currentItem?.recordId)?.img
+            return result === undefined ? '' : result
+        } else {
+            return ''
+        }
+    }
+    let src: string = getPhoto()
     return (
         <>
             <Dialog
@@ -150,7 +159,8 @@ export default function CatalogDetails() {
                         <CloseIcon />
                     </IconButton>
                 </DialogTitle>
-                <img alt={currentItem?.title} src={currentItem?.imgURL} style={{maxHeight:500, maxWidth:'100%', display:'flex',flexGrow:'1', justifySelf:'center',alignSelf:'center'}} loading='lazy'/>
+                {/*@ts-ignore*/}
+                <img alt={currentItem?.title} src={src} style={{maxHeight:500, maxWidth:'100%', display:'flex',flexGrow:'1', justifySelf:'center',alignSelf:'center'}} loading='lazy'/>
                 <DialogContent>
                     <Box sx={{display:'flex',flexDirection:'row',justifyContent:'space-between',alignItems:'flex-end'}}>
                         <Tooltip title="Software Available" arrow>

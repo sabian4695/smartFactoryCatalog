@@ -95,7 +95,7 @@ export const getUploadUrl = async (accessToken, catalogId, type, action) => {
             },
             params: {
                 action: action,
-                type,
+                type: action === 'PUT' ? type : null,
             },
             baseURL: BASE_URL,
         },
@@ -103,6 +103,21 @@ export const getUploadUrl = async (accessToken, catalogId, type, action) => {
     if (response.status !== 200) return;
     const data = response?.data?.body ? JSON.parse(response.data.body) : response.data;
     return data.url;
+};
+
+export const deletePhoto = async (accessToken, catalogId) => {
+    const response = await axios.delete(
+        `/smart-factory-catalog/${catalogId}/photoUrl`,
+        {
+            headers: {
+                'x-api-key': CONFIG.APP_API_KEY,
+                Authorization: accessToken,
+            },
+            baseURL: BASE_URL,
+        },
+    );
+    if(response.status !== 200) return;
+    return response?.data?.body ? JSON.parse(response.data.body) : response.data;
 };
 
 export const uploadAttachedDocument = async (url, fileData, fileType) => {

@@ -1,6 +1,5 @@
 import {atom} from 'recoil'
-import {getDataString} from "../helpers/storage";
-import {loggingEffect, saveToStorageEffect} from "../helpers/misc";
+import {getDataString, getSessionData} from "../helpers/storage";
 
 export interface itemType {
     recordId: string,
@@ -24,6 +23,11 @@ export interface cartItem {
     title: string,
 }
 
+export interface imgItem {
+    id: string,
+    img: string,
+}
+
 let defaultCart: cartItem[] = []
 let localCart = getDataString('cart')
 if (localCart !== null) {
@@ -45,4 +49,16 @@ export const catalogListAtom = atom({
 export const filteredCatalog = atom({
     key: "filteredCatalog",
     default: list,
+});
+
+let defaultImgData: imgItem[] = []
+let localImg = getSessionData('imgData')
+if (localImg !== null || true) {
+    //@ts-ignore
+    defaultImgData = JSON.parse(localImg)
+}
+
+export const imgData = atom({
+    key: "imgData",
+    default: defaultImgData,
 });

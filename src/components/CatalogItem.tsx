@@ -2,13 +2,12 @@ import React from 'react'
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
-import {catalogListAtom, cartItems, cartItem} from "./global/recoilTyped";
+import {catalogListAtom, cartItems, cartItem, imgData} from "./global/recoilTyped";
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import {
-    accessTokenAtom,
     categoryItem,
     categoryOpen,
     snackBarOpen,
@@ -24,7 +23,6 @@ import IconButton from "@mui/material/IconButton";
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import DoneIcon from '@mui/icons-material/Done';
 import Icon from '@mui/material/Icon';
-import {getUploadUrl} from "./helpers/api";
 
 export default function CatalogItem({sfItemID}: { sfItemID: any }) {
     const catalogList = useRecoilValue(catalogListAtom)
@@ -35,7 +33,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
     const setSnackText = useSetRecoilState(snackBarText);
     const setSnackSev = useSetRecoilState(snackBarSeverity);
     const setSnackOpen = useSetRecoilState(snackBarOpen);
-    const accessToken = useRecoilValue(accessTokenAtom)
+    const imageData = useRecoilValue(imgData);
     function openItem() {
         setItemDetails(sfItemID)
         setOpenModal(true)
@@ -56,17 +54,15 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
         setSnackText('Item added to cart')
         setSnackOpen(true)
     }
-    async function getImage(id: string | undefined) {
-        if (id === undefined) {
+    function getPhoto(): string{
+        if (currentItem?.imgURL !== '') {
+            let result = imageData.find(x => x.id === currentItem?.recordId)?.img
+            return result === undefined ? '' : result
+        } else {
             return ''
         }
-        if(id !== 'c42b5e1e-9413-493d-bfdf-98fe8635aa64') {
-            return ''
-        }
-        let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','GET')
-        console.log(imageURL)
-        return String(imageURL)
     }
+    let src: string = getPhoto()
 
     return (
         <>
@@ -108,7 +104,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                         <CardMedia
                             sx={{ height: 200 }}
                             //@ts-ignore
-                            //src={getImage(currentItem?.recordId)}
+                            src={src}
                             component='img'
                             title={currentItem?.title}
                             alt={currentItem?.title}

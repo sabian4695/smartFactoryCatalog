@@ -36,16 +36,15 @@ import Tooltip from '@mui/material/Tooltip';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import Badge from '@mui/material/Badge';
 import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
-import {cartItems, catalogListAtom, filteredCatalog} from './global/recoilTyped'
-import {getAppRoles, getCatalogItems} from "./helpers/api";
+import {cartItems, catalogListAtom, filteredCatalog, imgData, imgItem} from './global/recoilTyped'
+import {getAppRoles, getCatalogItems, getUploadUrl} from "./helpers/api";
 import {ListItem, ListItemButton} from "@mui/material";
 import useMediaQuery from '@mui/material/useMediaQuery';
-import {deleteData, storeData} from "./helpers/storage";
+import {deleteData, storeData, storeSessionData} from "./helpers/storage";
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -83,10 +82,11 @@ function Main() {
     const setCheckTitle = useSetRecoilState(areYouSureTitle);
     const setCheckDetails = useSetRecoilState(areYouSureDetails);
     const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
+    const [imageData, setImageData] = useRecoilState(imgData);
     const setCatalogList = useSetRecoilState(catalogListAtom)
     const setUserRole = useSetRecoilState(userRole);
     const accessToken = useRecoilValue(accessTokenAtom)
-    const [filtered, setFiltered] = useRecoilState(filteredCatalog)
+    const setFiltered = useSetRecoilState(filteredCatalog)
 
     function setTheme() {
         if(mode === 'light') {
@@ -168,11 +168,54 @@ function Main() {
         setSnackOpen(true)
     }
 
+    const getBase64FromUrl = async (url: string) => {
+        const data = await fetch(url);
+        const blob = await data.blob();
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onloadend = () => {
+                const base64data = reader.result;
+                resolve(base64data);
+            }
+        });
+    }
+
+    async function pullImage(id: string) {
+        if(imageData.find(x => x.id === id)) {
+            return
+        }
+        let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','GET')
+        //@ts-ignore
+        let image: string = await getBase64FromUrl(imageURL)
+        let newArray: imgItem[]
+        if (imageData.length === 0) {
+            newArray = [{id: id, img: image}]
+        } else {
+            newArray = imageData.map(obj => {
+                if (obj.id === id) {
+                    return {...obj,
+                        img: image
+                    }
+                }
+                return obj;
+            })
+        }
+
+        setImageData(newArray)
+    }
+
     React.useEffect(() => {
         setLoadingTitle('Getting Data')
         setOpenLoad(true)
 
         getCatalogItems(accessToken).then(response => {
+            response.catalogs.forEach((x: any) => {
+                if(x.imgURL === 'exists') {
+                   pullImage(x.recordId)
+                }
+            })
+
             setCatalogList(response.catalogs)
             setFiltered(response.catalogs)
             setOpenLoad(false)
@@ -191,6 +234,18 @@ function Main() {
     React.useEffect(() => {
         storeData('cart',JSON.stringify(cart))
     }, [cart])
+    React.useEffect(() => {
+        storeSessionData('imgData',JSON.stringify(imageData))
+    }, [imageData])
+
+    function handleSendCart() {
+
+        //send cart
+
+        setSnackSev('success')
+        setSnackText('Cart sent to Smart Factory Team')
+        setSnackOpen(true)
+    }
 
     return (
         <ThemeProvider theme={theme}>
@@ -298,6 +353,7 @@ function Main() {
                                     fullWidth
                                     variant='contained'
                                     disableElevation color='secondary' size='small'
+                                    onClick={handleSendCart}
                                 >
                                     Send Cart
                                 </Button>

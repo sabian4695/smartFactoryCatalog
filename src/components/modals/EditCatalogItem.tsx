@@ -32,9 +32,8 @@ import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
 import {DatePicker} from "@mui/x-date-pickers/DatePicker";
 import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
 import {itemType} from "../global/recoilTyped";
-import {createTableItem, getUploadUrl, uploadAttachedDocument} from "../helpers/api";
+import {createTableItem, deletePhoto, getUploadUrl, uploadAttachedDocument} from "../helpers/api";
 import {readFileData} from "../helpers/misc";
-import {Buffer} from "buffer";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import Grow from "@mui/material/Grow";
 import PhotoIcon from "@mui/icons-material/Photo";
@@ -102,7 +101,8 @@ export default function EditCatalogItem() {
 
     async function handleUploadPhoto(id: string) {
         let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','PUT')
-        let fileData = String(readFileData(imageCust))
+        let fileData = await readFileData(imageCust)
+
         fileData = fileData.replace('data:image/jpeg;base64,', '')
         await uploadAttachedDocument(imageURL,Buffer(fileData, 'base64'),'image/jpeg').then(() => {
             setOpenModal(false)
@@ -149,7 +149,7 @@ export default function EditCatalogItem() {
                 recordId: currentItem,
                 title: title,
                 status: status === null ? '' : status,
-                imgURL: image, //IMAGE STUFF NEEDS ADDED
+                imgURL: imageCust === null ? '' : 'exists',
                 webLink: webLink,
                 reportLink: reportLink,
                 description: description,
@@ -182,11 +182,19 @@ export default function EditCatalogItem() {
     }
 
     async function openImage() {
-        let imageURL = await getUploadUrl(accessToken, currentItem, 'image/jpeg','GET')
-        window.open(imageURL, '_blank');
+        let imgURLa
+        if (currentItemDetails?.imgURL !== '') {
+            imgURLa = await getUploadUrl(accessToken, currentItem, 'image/jpg','GET')
+        } else {
+            imgURLa = URL.createObjectURL(imageCust)
+        }
+        console.log(imgURLa)
+        window.open(imgURLa, '_blank');
     }
     async function removeImage() {
-        await getUploadUrl(accessToken, currentItem,'image/jpeg','DELETE')
+        if (currentItemDetails?.imgURL !== '') {
+            await deletePhoto(accessToken, currentItem)
+        }
         setImage('')
         setImageCust(null)
     }
@@ -197,15 +205,14 @@ export default function EditCatalogItem() {
             setTitle(currentItemDetails.title)
             setStatus(currentItemDetails.status)
             setImage('')
-            //setImageCust(currentItemDetails.imgURL === 'exists' ? 'exists' : null)
-            setImageCust('exists')
+            setImageCust(currentItemDetails.imgURL !== '' ? 'exists' : null)
             setWebLink(currentItemDetails.webLink)
             setReportLink(currentItemDetails.reportLink)
             setDescription(currentItemDetails.description)
             setDetails(currentItemDetails.details)
             setUnits(currentItemDetails.unitAdoption)
-            setDept(currentItemDetails.department)
-            setOrg(currentItemDetails.org)
+            setDept(currentItemDetails.department === undefined ? null : currentItemDetails.department)
+            setOrg(currentItemDetails.org === undefined ? null : currentItemDetails.org)
             setType(currentItemDetails.typeAvailable)
             setReleaseDate(currentItemDetails.releasedDate === null ? null : dayjs(currentItemDetails.releasedDate))
         }
@@ -365,18 +372,22 @@ export default function EditCatalogItem() {
                             <Grid xs={2} sm={1} alignSelf='center'>
                                 <Grow in={true} timeout={300}>
                                     <Tooltip title='View Image' arrow>
-                                        <IconButton onClick={openImage} size='small' disabled={!imageCust}>
-                                            <PhotoIcon/>
-                                        </IconButton>
+                                        <span>
+                                            <IconButton onClick={openImage} size='small' disabled={!imageCust}>
+                                                <PhotoIcon/>
+                                            </IconButton>
+                                        </span>
                                     </Tooltip>
                                 </Grow>
                             </Grid>
                             <Grid xs={2} sm={1} alignSelf='center'>
                                 <Grow in={true} timeout={500}>
                                     <Tooltip title='Remove Image' arrow>
-                                        <IconButton onClick={removeImage} size='small' disabled={!imageCust}>
-                                            <DeleteIcon/>
-                                        </IconButton>
+                                        <span>
+                                            <IconButton onClick={removeImage} size='small' disabled={!imageCust}>
+                                                <DeleteIcon/>
+                                            </IconButton>
+                                        </span>
                                     </Tooltip>
                                 </Grow>
                             </Grid>

@@ -94,7 +94,7 @@ export default function AddCatalogItem() {
 
     async function handleUploadPhoto(id: string) {
         let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','PUT')
-        let fileData = String(readFileData(imageCust))
+        let fileData = await readFileData(imageCust)
         fileData = fileData.replace('data:image/jpeg;base64,', '')
         await uploadAttachedDocument(imageURL,Buffer(fileData, 'base64'),'image/jpeg').then(() => {
             setOpenModal(false)
@@ -349,18 +349,22 @@ export default function AddCatalogItem() {
                             <Grid xs={2} sm={1} alignSelf='center'>
                                 <Grow in={true} timeout={300}>
                                     <Tooltip title='View Image' arrow>
-                                        <IconButton onClick={openImage} size='small' disabled={!imageCust}>
-                                            <PhotoIcon/>
-                                        </IconButton>
+                                        <span>
+                                            <IconButton onClick={openImage} size='small' disabled={!imageCust}>
+                                                <PhotoIcon/>
+                                            </IconButton>
+                                        </span>
                                     </Tooltip>
                                 </Grow>
                             </Grid>
                             <Grid xs={2} sm={1} alignSelf='center'>
                                 <Grow in={true} timeout={500}>
                                     <Tooltip title='Remove Image' arrow>
-                                        <IconButton onClick={removeImage} size='small' disabled={!imageCust}>
-                                            <DeleteIcon/>
-                                        </IconButton>
+                                        <span>
+                                            <IconButton onClick={removeImage} size='small' disabled={!imageCust}>
+                                                <DeleteIcon/>
+                                            </IconButton>
+                                        </span>
                                     </Tooltip>
                                 </Grow>
                             </Grid>
