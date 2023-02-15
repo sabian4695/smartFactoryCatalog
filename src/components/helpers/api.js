@@ -138,3 +138,17 @@ export const getUserInfo = async (accessToken, userId) => {
     );
     return response?.data?.body ? JSON.parse(response?.data) : response?.data
 }
+
+export const getURLs = async (accessToken) => {
+    const response = await axios.get(
+        '/smart-portal/urls',
+        {
+            headers: {
+                'x-api-key': CONFIG.APP_API_KEY,
+                Authorization: accessToken,
+            },
+            baseURL: BASE_URL,
+        },
+    );
+    return response?.data?.body ? JSON.parse(response.data.body) : response.data;
+}

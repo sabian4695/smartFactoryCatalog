@@ -7,6 +7,7 @@ export interface itemType {
     status: string,
     imgURL: string,
     webLink: string | null,
+    displayLink: string | null,
     reportLink: string | null,
     description: string,
     details: string,

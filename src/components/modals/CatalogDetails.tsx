@@ -219,6 +219,15 @@ export default function CatalogDetails() {
                                 //@ts-ignore
                                 href={currentItem?.webLink} target='blank'>Visit Website</Button>
                     }
+                    {(currentItem?.displayLink === '' || currentItem?.displayLink === undefined) ? null :
+                        <Button size="small"
+                                variant='outlined'
+                                color='secondary'
+                                sx={{mt:1, display:'flex'}}
+                                component='a'
+                            //@ts-ignore
+                                href={currentItem?.displayLink} target='blank'>Open Display</Button>
+                    }
                     {currentItem?.reportLink === '' ? null :
                         <Button size="small"
                                 variant='outlined'

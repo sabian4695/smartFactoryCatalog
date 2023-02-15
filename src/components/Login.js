@@ -39,7 +39,7 @@ const Login = () => {
     const [loadingMessage, setLoadingMessage] = useRecoilState(loadingMessageSelector);
     const setLoadingTitle = useSetRecoilState(loadingTitle);
     const setOpenLoad = useSetRecoilState(loadingOpen);
-    const setUserRole = useSetRecoilState(userRole);
+    const [errorText, setErrorText] = React.useState('')
     const [accessToken, setAccessToken] = useRecoilState(accessTokenAtom);
     const setUserId = useSetRecoilState(userIdAtom);
     const setRefreshToken = useSetRecoilState(refreshTokenAtom);
@@ -47,6 +47,7 @@ const Login = () => {
     const setRefreshExpiry = useSetRecoilState(refreshExpiryAtom);
     const setLoggedInUser = useSetRecoilState(loggedInUserAtom);
     const [mode, setMode] = useRecoilState(themeMode);
+    const [attempts, setAttempts] = useState(0)
     const [showPassword, setShowPassword] = useState(false)
     const handleClickShowPassword = () => {
         setShowPassword(!showPassword)
@@ -198,6 +199,7 @@ const Login = () => {
     const authenticate = async event => {
         event.preventDefault();
         setLoginError(false);
+        setErrorText('')
         try {
             setLoadingMessage('Authenticating');
             setOpenLoad(true)
@@ -218,7 +220,12 @@ const Login = () => {
             setPasswordValue('');
         } catch (e) {
             setLoginError(true);
+            setAttempts(attempts+1)
             console.error('login error ->', e);
+            setErrorText('Error: ' + e.response.data.message + '. Please try again.')
+            if (attempts > 2) {
+                setErrorText('Please contact smart factory team for help')
+            }
         } finally {
             setLoadingMessage(null);
             setOpenLoad(false)
@@ -234,7 +241,7 @@ const Login = () => {
                 height="132"
                 style={styles.logo}
             />
-            <p style={styles.appTitle}>{`${CONFIG.APP_DISPLAY_NAME} v23.02.07.1`}</p>
+            <p style={styles.appTitle}>{`${CONFIG.APP_DISPLAY_NAME} v23.02.15.1`}</p>
             <Box style={styles.form} component='form'>
                 <Stack spacing={2}>
                     <TextField
@@ -280,6 +287,7 @@ const Login = () => {
                     >
                         LOGIN
                     </Button>
+                    <Box sx={{mx:1, mt:0.5}}><Typography color='error'>{errorText}</Typography></Box>
                 </Stack>
             </Box>
             <Box style={styles.lightBulb}>

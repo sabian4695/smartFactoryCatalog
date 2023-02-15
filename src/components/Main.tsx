@@ -41,12 +41,60 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
 import {cartItems, catalogListAtom, filteredCatalog, imgData, imgItem} from './global/recoilTyped'
-import {getAppRoles, getCatalogItems, getUploadUrl, getUserInfo} from "./helpers/api";
+import {getAppRoles, getCatalogItems, getUploadUrl, getURLs, getUserInfo} from "./helpers/api";
 import {ListItem, ListItemButton} from "@mui/material";
 import useMediaQuery from '@mui/material/useMediaQuery';
-import {deleteData, getDataString, storeData, storeSessionData} from "./helpers/storage";
-import {getBase64FromUrl, resizeImage} from "./helpers/misc";
+import {deleteData, getDataString, storeData} from "./helpers/storage";
+import {getBase64FromUrl} from "./helpers/misc";
 import {createEmailBody} from "./helpers/emailTemplate";
+import SearchIcon from '@mui/icons-material/Search';
+import InputBase from '@mui/material/InputBase';
+import { styled } from '@mui/material/styles';
+
+const Search = styled('div')(({ theme }) => ({
+    position: 'relative',
+    borderRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.mode === 'light' ? theme.palette.grey[100] : theme.palette.grey[800],
+    '&:hover': {
+        backgroundColor: theme.palette.mode === 'light' ? theme.palette.common.white : theme.palette.grey[700],
+    },
+    marginLeft: 0,
+    width: '100%',
+    [theme.breakpoints.up('sm')]: {
+        marginLeft: theme.spacing(1),
+        width: 'auto',
+    },
+}));
+
+const SearchIconWrapper = styled('div')(({ theme }) => ({
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(0,1),
+    [theme.breakpoints.up('sm')]: {
+        padding: theme.spacing(0,2),
+    },
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+    color: 'inherit',
+    '& .MuiInputBase-input': {
+        padding: theme.spacing(1, 1, 1, 0),
+        paddingLeft: `calc(1em + ${theme.spacing(2.5)})`,
+        transition: theme.transitions.create('width'),
+        width: '100%',
+        [theme.breakpoints.up('sm')]: {
+            width: '12ch',
+            '&:focus': {
+                width: '20ch',
+            },
+            paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+        },
+    },
+}));
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -85,10 +133,12 @@ function Main() {
     const setCheckDetails = useSetRecoilState(areYouSureDetails);
     const [checkAccept, setCheckAccept] = useRecoilState(areYouSureAccept);
     const [imageData, setImageData] = useRecoilState(imgData);
-    const setCatalogList = useSetRecoilState(catalogListAtom)
+    const [catalogList, setCatalogList] = useRecoilState(catalogListAtom)
     const setUserRole = useSetRecoilState(userRole);
     const accessToken = useRecoilValue(accessTokenAtom)
     const setFiltered = useSetRecoilState(filteredCatalog)
+    const [searchText, setSearchText] = React.useState('')
+    const [disabledCartSend, setDisabledCartSend] = React.useState(false)
 
     function setTheme() {
         if(mode === 'light') {
@@ -168,29 +218,25 @@ function Main() {
     }
     let first = 0
     async function pullImage(id: string) {
-
-
         if(imageData.find(x => x.id === id)) {return}
         let imageURL = await getUploadUrl(accessToken, id, 'image/jpeg','GET')
         //@ts-ignore
         let image: string = await getBase64FromUrl(imageURL)
-        let resized: string = await resizeImage(image, 500, 500)
-
         if (first === 0) { //if array is empty
             first = 1
-            setImageData([{id: id, img: resized}])
+            setImageData([{id: id, img: image}])
         } else if(imageData.find(x => x.id === id)) { //if item is already in array
             let newArray: imgItem[] = imageData.map(obj => {
                 if (obj.id === id) {
                     return {...obj,
-                        img: resized
+                        img: image
                     }
                 }
                 return obj;
             })
             setImageData(newArray)
         } else { //if item is not in array
-            setImageData((prevState: any) => [...prevState, {id:id, img: resized}])
+            setImageData((prevState: any) => [...prevState, {id:id, img: image}])
         }
     }
 
@@ -204,7 +250,6 @@ function Main() {
                    await pullImage(x.recordId).then()
                 }
             })
-
             setCatalogList(response.catalogs)
             setFiltered(response.catalogs)
             setOpenLoad(false)
@@ -223,33 +268,44 @@ function Main() {
     React.useEffect(() => {
         storeData('cart',JSON.stringify(cart))
     }, [cart])
-    React.useEffect(() => {
-        //storeSessionData('imgData',JSON.stringify(imageData))
-    }, [imageData])
 
     async function handleSendCart() {
-        setLoadingTitle('Sending Cart')
+        setLoadingTitle('Packaging the request')
         setOpenLoad(true)
+        let subject: string = 'Smart Factory Catalog Information Request'
+        let body: string
+        await getUserInfo(accessToken,userId).then(response => {
+            body = getDataString('loggedInUser') + ' (' + response.user[0].userSite + ') ' + 'has requested information about the following smart factory items: \n'
+            cart.forEach(x => body = body + x.title + '\n')
+        }).catch(() => {
+            setSnackSev('error')
+            setSnackText('An error occurred')
+            setSnackOpen(true)
+        }).then(() => {
+            setLoadingTitle('Sending Cart')
+            setDisabledCartSend(true)
+            //SEND EMAIL
+        }).then(() => {
+            setOpenLoad(false)
+            setSnackSev('success')
+            setSnackText('Cart sent successfully. Thank you!')
+            setSnackOpen(true)
+            setCart([])
+        })
+    }
 
-        // await getUserInfo(accessToken, userId).then(response => {
-        //     console.log(response)
-        // })
+    function fnSearchText(event: any) {
+        setSearchText(event.target.value)
+        searchBarFilter(event.target.value)
+    }
 
-        let emailText: string = createEmailBody(getDataString('loggedInUser'),cart.map(x => x.title))
-
-        let cartArr = ''
-        cart.forEach(x => cartArr = cartArr + encodeURIComponent(x.title + '\n'))
-
-        window.location.href = 'mailto: support@nifco.zendesk.com&subject=' + encodeURIComponent('Smart Factory Catalog Information Request') +
-            //@ts-ignore
-            '&body=' + encodeURIComponent(getDataString('loggedInUser')) + encodeURIComponent(' requested information regarding the following Smart Factory Catalog Items\n') +
-            + cartArr
-
-        //send cart
-        setOpenLoad(false)
-        setSnackSev('success')
-        setSnackText('Cart sent to Smart Factory Team')
-        setSnackOpen(true)
+    const searchBarFilter = (targetText: string) => {
+        if (targetText.length > 0) {
+            const filtered = catalogList.filter((data) => JSON.stringify({[data.title]: data.description}).toLowerCase().indexOf(targetText.toLowerCase()) !== -1);
+            setFiltered(filtered)
+        } else {
+            setFiltered(catalogList)
+        }
     }
 
     return (
@@ -257,20 +313,36 @@ function Main() {
             <Box>
                 <CssBaseline />
                 <Box sx={{flexGrow: 1}}>
-                    <AppBar position="fixed" sx={mode === 'light' ? {backgroundColor:'#eeeeee'} : {backgroundColor:'#151515'}} elevation={2}>
+                    <AppBar position="fixed" sx={mode === 'light' ? {backgroundColor: theme.palette.grey[300]} : {backgroundColor: theme.palette.grey[900]}} elevation={2}>
                         <Toolbar>
                             <img
                                 src={logo}
-                                height='40'
+                                height={notMobile ? '40' : '30'}
                                 alt='logo'
                             >
                             </img>
-                            <Typography variant="h6" component="div" sx={{flexGrow: 1, ml:1}}>
-                                Smart Factory Catalog
+                            <Typography variant="h6" component="div" sx={notMobile ? {flexGrow: 1, ml:1} : {flexGrow: 1, ml:0.5}}>
+                                {notMobile ? 'Smart Factory Catalog' : 'Catalog'}
                             </Typography>
-                            <Typography display='inline'>
-                                {theme.palette.mode} mode
-                            </Typography>
+                            <Search sx={{mx:1}}>
+                                <SearchIconWrapper>
+                                    <SearchIcon />
+                                </SearchIconWrapper>
+                                <StyledInputBase
+                                    placeholder="Search…"
+                                    inputProps={{ 'aria-label': 'search' }}
+                                    value={searchText}
+                                    onChange={fnSearchText}
+                                />
+                            </Search>
+                            {notMobile ?
+                                <Typography display='inline' textAlign='right' sx={{ml:2}}>
+                                    {theme.palette.mode} mode
+                                </Typography>
+                            :
+                                null
+                            }
+
                             <Tooltip title="Change Theme" arrow>
                                 <IconButton onClick={setTheme} color="inherit">
                                     {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
@@ -278,7 +350,7 @@ function Main() {
                             </Tooltip>
                             <Tooltip title="Cart" arrow>
                                 <IconButton
-                                    sx={{ ml: 1 }}
+                                    sx={notMobile ? { ml: 1 } : undefined}
                                     color="inherit"
                                     onClick={(event: React.MouseEvent<HTMLElement>) => {setAnchorEl(event.currentTarget)}}
                                 >
@@ -288,7 +360,7 @@ function Main() {
                                 </IconButton>
                             </Tooltip>
                             <Tooltip title="Logout" arrow>
-                                <IconButton sx={{ ml: 1 }} color="inherit" onClick={handleLogoutClick}>
+                                <IconButton sx={notMobile ? { ml: 1 } : undefined} color="inherit" onClick={handleLogoutClick}>
                                     <LogoutIcon/>
                                 </IconButton>
                             </Tooltip>
@@ -351,17 +423,20 @@ function Main() {
                                 ))}
                             </Box>
                         </Tooltip>
-                        <ListItem disablePadding sx={{mt:1}} key={'4'}>
+                        <ListItem disablePadding sx={{mt:1,pr:2}} key={'4'}>
                             <Tooltip title='Informs Smart Factory team that you are interested in what you have selected!' arrow>
+                                <Box width='100%'>
                                 <Button
                                     sx={{mx:1}}
                                     fullWidth
                                     variant='contained'
                                     disableElevation color='secondary' size='small'
                                     onClick={handleSendCart}
+                                    disabled={disabledCartSend}
                                 >
                                     Send Cart to Team
                                 </Button>
+                                </Box>
                             </Tooltip>
                         </ListItem>
                     </Box>

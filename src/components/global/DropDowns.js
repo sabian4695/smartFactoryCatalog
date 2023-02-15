@@ -4,6 +4,6 @@ export const statusOptions = ['development', 'released']
 
 export const orgOptions = ['CNL','CWH','SLB','LVG','CUU','NCM']
 
-export const departmentOptions = ['Design','Production','Packaging','Shipping','Quality']
+export const departmentOptions = ['Admin','Design','Planning','Production','Project','Logistics','Quality','Quoting','Sales','Tooling']
 
 export const typeOptions = ['Web', 'iPhone', 'Display', 'Report','Line-side']

@@ -51,6 +51,7 @@ export default function EditCatalogItem() {
     const [status, setStatus] = React.useState<string | null>(null);
     const [image, setImage] = React.useState('')
     const [webLink, setWebLink] = React.useState<string | null>('')
+    const [displayLink, setDisplayLink] = React.useState<string | null>('')
     const [reportLink, setReportLink] = React.useState<string | null>('')
     const [description, setDescription] = React.useState('')
     const [details, setDetails] = React.useState('')
@@ -152,6 +153,7 @@ export default function EditCatalogItem() {
                         status: status === null ? '' : status,
                         imgURL: imageCust === null ? '' : 'exists',
                         webLink: webLink,
+                        displayLink: displayLink,
                         reportLink: reportLink,
                         description: description,
                         details: details,
@@ -171,6 +173,7 @@ export default function EditCatalogItem() {
                 status: status === null ? '' : status,
                 imgURL: imageCust === null ? '' : 'exists',
                 webLink: webLink,
+                displayLink: displayLink,
                 reportLink: reportLink,
                 description: description,
                 details: details,
@@ -227,6 +230,7 @@ export default function EditCatalogItem() {
             setImage('')
             setImageCust(currentItemDetails.imgURL !== '' ? 'exists' : null)
             setWebLink(currentItemDetails.webLink)
+            setDisplayLink(currentItemDetails.displayLink)
             setReportLink(currentItemDetails.reportLink)
             setDescription(currentItemDetails.description)
             setDetails(currentItemDetails.details)
@@ -324,6 +328,30 @@ export default function EditCatalogItem() {
                                 />
                             </Grid>
                             <Grid xs={12} sm={4}>
+                                <TextField
+                                    value={webLink}
+                                    onChange={(event: any) => setWebLink(event.target.value)}
+                                    label='Web Link'
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={12} sm={4}>
+                                <TextField
+                                    value={displayLink}
+                                    onChange={(event: any) => setDisplayLink(event.target.value)}
+                                    label='Display Link'
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={12} sm={4}>
+                                <TextField
+                                    value={reportLink}
+                                    onChange={(event: any) => setReportLink(event.target.value)}
+                                    label='Report Link'
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={12} sm={5}>
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                                     <DatePicker
                                         closeOnSelect
@@ -340,33 +368,6 @@ export default function EditCatalogItem() {
                                         }}
                                     />
                                 </LocalizationProvider>
-                            </Grid>
-                            <Grid xs={12} sm={4}>
-                                <TextField
-                                    value={webLink}
-                                    onChange={(event: any) => setWebLink(event.target.value)}
-                                    label='Web Link'
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid xs={12} sm={4}>
-                                <TextField
-                                    value={reportLink}
-                                    onChange={(event: any) => setReportLink(event.target.value)}
-                                    label='Report Link'
-                                    fullWidth
-                                />
-                            </Grid>
-                            <Grid xs={12} sm={5}>
-                                <Autocomplete
-                                    value={org}
-                                    onChange={(event: any, newValue: string | null) => {
-                                        setOrg(newValue);
-                                    }}
-                                    options={orgOptions}
-                                    renderInput={(params) => <TextField {...params} label="Org" />}
-                                    fullWidth
-                                />
                             </Grid>
                             <Grid xs={8} sm={5} display='flex'>
                                 <Tooltip title='JPG files only' arrow>
@@ -411,7 +412,18 @@ export default function EditCatalogItem() {
                                     </Tooltip>
                                 </Grow>
                             </Grid>
-                            <Grid xs={12} sm={6}>
+                            <Grid xs={12} sm={3}>
+                                <Autocomplete
+                                    value={org}
+                                    onChange={(event: any, newValue: string | null) => {
+                                        setOrg(newValue);
+                                    }}
+                                    options={orgOptions}
+                                    renderInput={(params) => <TextField {...params} label="Org" />}
+                                    fullWidth
+                                />
+                            </Grid>
+                            <Grid xs={12} sm={5}>
                                 <Autocomplete
                                     multiple
                                     value={units}
@@ -440,7 +452,7 @@ export default function EditCatalogItem() {
                                     )}
                                 />
                             </Grid>
-                            <Grid xs={12} sm={6}>
+                            <Grid xs={12} sm={4}>
                                 <Autocomplete
                                     value={dept}
                                     onChange={(event: any, newValue: string | null) => {

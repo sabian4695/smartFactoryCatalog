@@ -34,7 +34,7 @@ export default function FilterDrawer() {
     const setSnackSev = useSetRecoilState(snackBarSeverity);
     const setSnackOpen = useSetRecoilState(snackBarOpen);
     const catalogList = useRecoilValue(catalogListAtom)
-    const setFiltered = useSetRecoilState(filteredCatalog)
+    const [filtered, setFiltered] = useRecoilState(filteredCatalog)
     const handleDeptChange = (event: SelectChangeEvent) => {
         setDept(event.target.value as string);
     }
@@ -89,6 +89,17 @@ export default function FilterDrawer() {
         setSnackOpen(true)
         setOpenDrawer(false)
     }
+
+    React.useEffect(() => {
+        if (!openDrawer) {return}
+        if (filtered === catalogList) {
+            setTypes([])
+            setStatus('')
+            setOrg('')
+            setUnits([])
+            setDept('')
+        }
+    }, [openDrawer])
     return(
         <>
             <Drawer

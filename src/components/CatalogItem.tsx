@@ -81,7 +81,23 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                                     target='blank'
                                     sx={{left:8,top:160,position:'absolute'}}
                                 >
-                                    Visit
+                                    Website
+                                </Button>
+                            </Tooltip>
+                        }
+                        {(currentItem?.displayLink ===  '' || currentItem?.displayLink === undefined) ? null :
+                            <Tooltip title="Display Screen" arrow>
+                                <Button
+                                    size="small"
+                                    variant='contained'
+                                    color='secondary'
+                                    component='a'
+                                    //@ts-ignore
+                                    href={currentItem?.displayLink}
+                                    target='blank'
+                                    sx={{right:140,top:160,position:'absolute'}}
+                                >
+                                    Display
                                 </Button>
                             </Tooltip>
                         }
@@ -102,7 +118,7 @@ export default function CatalogItem({sfItemID}: { sfItemID: any }) {
                             </Tooltip>
                         }
                         <CardMedia
-                            sx={{ height: 200 }}
+                            sx={{ height: 200, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
                             //@ts-ignore
                             src={src}
                             component='img'
