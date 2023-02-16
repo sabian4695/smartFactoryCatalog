@@ -52,9 +52,9 @@ export default function AddCatalogItem() {
     const [description, setDescription] = React.useState('')
     const [details, setDetails] = React.useState('')
     const [units, setUnits] = React.useState<string[]>([])
-    const [org, setOrg] = React.useState<string | null>(null);
+    const [org, setOrg] = React.useState<string[]>([])
     const [type, setType] = React.useState<string[]>([])
-    const [dept, setDept] = React.useState<string | null>(null);
+    const [dept, setDept] = React.useState<string[]>([])
     const [releaseDate, setReleaseDate] = React.useState<Dayjs | null>(dayjs())
     const [errorText, setErrorText] = React.useState('')
     const setLoadingTitle = useSetRecoilState(loadingTitle);
@@ -212,9 +212,9 @@ export default function AddCatalogItem() {
         setDescription('')
         setDetails('')
         setUnits([])
-        setOrg(null)
+        setOrg([])
         setType([])
-        setDept(null)
+        setDept([])
         setReleaseDate(null)
         setImageCust(null)
         setErrorText('')
@@ -392,13 +392,31 @@ export default function AddCatalogItem() {
                             </Grid>
                             <Grid xs={12} sm={3}>
                                 <Autocomplete
+                                    multiple
                                     value={org}
-                                    onChange={(event: any, newValue: string | null) => {
-                                        setOrg(newValue);
+                                    onChange={(event, newValue) => {
+                                        setOrg([
+                                            ...newValue,
+                                        ]);
                                     }}
+                                    id="checkboxes-tags-demo"
                                     options={orgOptions}
-                                    renderInput={(params) => <TextField {...params} label="Org" />}
-                                    fullWidth
+                                    disableCloseOnSelect
+                                    getOptionLabel={(option) => option}
+                                    renderOption={(props, option, { selected }) => (
+                                        <li {...props}>
+                                            <Checkbox
+                                                icon={icon}
+                                                checkedIcon={checkedIcon}
+                                                style={{ marginRight: 8 }}
+                                                checked={selected}
+                                            />
+                                            {option}
+                                        </li>
+                                    )}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Orgs" placeholder="Org" />
+                                    )}
                                 />
                             </Grid>
                             <Grid xs={12} sm={5}>
@@ -426,19 +444,37 @@ export default function AddCatalogItem() {
                                         </li>
                                     )}
                                     renderInput={(params) => (
-                                        <TextField {...params} label="Unit Adoption" placeholder="Units" />
+                                        <TextField {...params} label="Units" placeholder="Units" />
                                     )}
                                 />
                             </Grid>
                             <Grid xs={12} sm={4}>
                                 <Autocomplete
+                                    multiple
                                     value={dept}
-                                    onChange={(event: any, newValue: string | null) => {
-                                        setDept(newValue);
+                                    onChange={(event, newValue) => {
+                                        setDept([
+                                            ...newValue,
+                                        ]);
                                     }}
+                                    id="checkboxes-tags-demo"
                                     options={departmentOptions}
-                                    renderInput={(params) => <TextField {...params} label="Department" />}
-                                    fullWidth
+                                    disableCloseOnSelect
+                                    getOptionLabel={(option) => option}
+                                    renderOption={(props, option, { selected }) => (
+                                        <li {...props}>
+                                            <Checkbox
+                                                icon={icon}
+                                                checkedIcon={checkedIcon}
+                                                style={{ marginRight: 8 }}
+                                                checked={selected}
+                                            />
+                                            {option}
+                                        </li>
+                                    )}
+                                    renderInput={(params) => (
+                                        <TextField {...params} label="Departments" placeholder="Department" />
+                                    )}
                                 />
                             </Grid>
                         </Grid>

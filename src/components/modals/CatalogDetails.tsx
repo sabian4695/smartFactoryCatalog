@@ -189,15 +189,39 @@ export default function CatalogDetails() {
                     </DialogContentText>
                     <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
                         <Box>
-                            {currentItem?.unitAdoption.length === 0 ? null :
-                                <Typography display='inline' color='text.secondary'>
-                                    Adopted by:
-                                </Typography>
-                            }
-                            {/*@ts-ignore*/}
-                            {currentItem?.unitAdoption.map(x => (
-                                <Chip size='small' sx={{mx:0.5}} key={x} color='primary' variant='outlined' label={x}/>
-                            ))}
+                            <Box>
+                                {currentItem?.unitAdoption.length === 0 ? null :
+                                    <Typography display='inline' color='text.secondary'>
+                                        Unit Adoption:
+                                    </Typography>
+                                }
+                                {/*@ts-ignore*/}
+                                {currentItem?.unitAdoption.map(x => (
+                                    <Chip size='small' sx={{mx:0.5}} key={x} color='primary' variant='outlined' label={x}/>
+                                ))}
+                            </Box>
+                            <Box>
+                                {currentItem?.department.length === 0 ? null :
+                                    <Typography display='inline' color='text.secondary'>
+                                        Department Adoption:
+                                    </Typography>
+                                }
+                                {/*@ts-ignore*/}
+                                {currentItem?.department.map(x => (
+                                    <Chip size='small' sx={{mx:0.5}} key={x} color='secondary' variant='outlined' label={x}/>
+                                ))}
+                            </Box>
+                            <Box>
+                                {currentItem?.org.length === 0 ? null :
+                                    <Typography display='inline' color='text.secondary'>
+                                        Org Adoption:
+                                    </Typography>
+                                }
+                                {/*@ts-ignore*/}
+                                {currentItem?.org.map(x => (
+                                    <Chip size='small' sx={{mx:0.5}} key={x} color='secondary' variant='outlined' label={x}/>
+                                ))}
+                            </Box>
                         </Box>
                         <Button
                             onClick={addToCart}
