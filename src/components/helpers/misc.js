@@ -80,6 +80,25 @@ let need = [
 
 ]
 
+let dontneed = [
+    {
+        "appName": "Shipping Order Progress Screen - SLB",
+        "department": [
+            "Logistics"
+        ],
+        "appUrl": "https://dck24nrq1je3f.cloudfront.net/da2-lqo3vmv5cjhenbcoun2nqavanm/30030&7351A",
+        "orgCode": [
+            "SLB"
+        ],
+        "description": "Toyota Skid Build Manifest Scanning Progress",
+        "type": [
+            "PI",
+            "Status"
+        ]
+    },
+
+]
+
 let something = [
     {
         "appName": "GWH - Pass Thru No Repack",
@@ -226,7 +245,7 @@ let something = [
         "orgCode": [
             "CNL"
         ],
-        "description": "ENGINGEERING black screen for CNL",
+        "description": "ENGINEERING black screen for CNL",
         "type": [
             "PI",
             "Black Screen"
@@ -332,21 +351,6 @@ let something = [
         "type": [
             "PI",
             "Video Updates"
-        ]
-    },
-    {
-        "appName": "Shipping Order Progress Screen - SLB",
-        "department": [
-            "Logistics"
-        ],
-        "appUrl": "https://dck24nrq1je3f.cloudfront.net/da2-lqo3vmv5cjhenbcoun2nqavanm/30030&7351A",
-        "orgCode": [
-            "SLB"
-        ],
-        "description": "Toyota Skid Build Manifest Scanning Progress",
-        "type": [
-            "PI",
-            "Status"
         ]
     },
     {
@@ -560,44 +564,6 @@ let something = [
         "type": [
             "Application",
             "Data Tracking"
-        ]
-    },
-    {
-        "appName": "Kiosk PI Manager",
-        "orgCode": [
-            "CNL",
-            "CWH",
-            "SLB",
-            "LVG",
-            "CUU",
-            "NCM",
-            "KWA"
-        ],
-        "department": [
-            "Admin"
-        ],
-        "description": "Pi Manager for Displays",
-        "appUrl": "https://d3g86hsfntc2zc.cloudfront.net"
-    },
-    {
-        "appName": "RFID Reader Manager",
-        "department": [
-            "Admin"
-        ],
-        "appUrl": "https://d1pfx3rdc1dgik.cloudfront.net/",
-        "orgCode": [
-            "CNL",
-            "CWH",
-            "SLB",
-            "LVG",
-            "CUU",
-            "NCM",
-            "KWA"
-        ],
-        "description": "Manager for CWH RFID Readers",
-        "type": [
-            "Application",
-            "Manager Tools"
         ]
     },
     {

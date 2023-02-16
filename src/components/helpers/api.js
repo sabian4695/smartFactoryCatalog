@@ -152,3 +152,18 @@ export const getURLs = async (accessToken) => {
     );
     return response?.data?.body ? JSON.parse(response.data.body) : response.data;
 }
+
+export const sendEmail = async (accessToken, userId, user, site, catalogArr) => {
+    const response = await axios.put(
+        `/smart-factory-catalog/user/${userId}`,
+        {userId, user, site, catalogArr},
+        {
+            headers: {
+                'x-api-key': CONFIG.APP_API_KEY,
+                Authorization: accessToken,
+            },
+            baseURL: BASE_URL,
+        },
+    );
+    return response?.status === 200 ? response?.data : null;
+}

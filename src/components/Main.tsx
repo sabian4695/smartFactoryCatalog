@@ -16,17 +16,10 @@ import AddCatalogItem from '../components/modals/AddCatalogItem'
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert, {AlertProps} from '@mui/material/Alert';
 import {
-    snackBarOpen,
-    snackBarText,
-    snackBarSeverity,
-    accessTokenAtom,
-    userIdAtom,
-    refreshTokenAtom,
-    accessExpiryAtom,
-    refreshExpiryAtom,
-    loggedInUserAtom,
-    loadingMessageSelector,
-    loadingTitle, loadingOpen, areYouSure, areYouSureTitle, areYouSureDetails, areYouSureAccept, userRole
+    snackBarOpen, snackBarText, snackBarSeverity,
+    accessTokenAtom, userIdAtom, refreshTokenAtom, accessExpiryAtom, refreshExpiryAtom,
+    loggedInUserAtom, loadingMessageSelector, loadingTitle, loadingOpen,
+    areYouSure, areYouSureTitle, areYouSureDetails, areYouSureAccept, userRole
 } from "./global/recoilMain";
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import FilterDrawer from "../components/modals/FilterDrawer";
@@ -41,12 +34,11 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
 import {cartItems, catalogListAtom, filteredCatalog, imgData, imgItem} from './global/recoilTyped'
-import {getAppRoles, getCatalogItems, getUploadUrl, getURLs, getUserInfo} from "./helpers/api";
+import {getAppRoles, getCatalogItems, getUploadUrl, getURLs, getUserInfo, sendEmail} from "./helpers/api";
 import {ListItem, ListItemButton} from "@mui/material";
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {deleteData, getDataString, storeData} from "./helpers/storage";
 import {getBase64FromUrl} from "./helpers/misc";
-import {createEmailBody} from "./helpers/emailTemplate";
 import SearchIcon from '@mui/icons-material/Search';
 import InputBase from '@mui/material/InputBase';
 import { styled } from '@mui/material/styles';
@@ -259,6 +251,7 @@ function Main() {
                 setUserRole('admin')
             } else if(response.roles[0] === '7c026fb3-514c-4911-b047-b7c5193ab0ca') {
                 setUserRole('viewer')
+                setCatalogList(catalogList.filter((x: any) => x.department !== 'Admin'))
             } else(
                 setUserRole('')
             )
@@ -272,25 +265,24 @@ function Main() {
     async function handleSendCart() {
         setLoadingTitle('Packaging the request')
         setOpenLoad(true)
-        let subject: string = 'Smart Factory Catalog Information Request'
-        let body: string
         await getUserInfo(accessToken,userId).then(response => {
-            body = getDataString('loggedInUser') + ' (' + response.user[0].userSite + ') ' + 'has requested information about the following smart factory items: \n'
-            cart.forEach(x => body = body + x.title + '\n')
+            setLoadingTitle('Sending Cart')
+            setDisabledCartSend(true)
+            sendEmail(accessToken,userId,getDataString('loggedInUser'),response.user[0].userSite,cart.map(x => x.title)).then(() => {
+                setOpenLoad(false)
+                setSnackSev('success')
+                setSnackText('Cart sent successfully. Thank you!')
+                setSnackOpen(true)
+                setCart([])
+            }).catch(() => {
+                setSnackSev('error')
+                setSnackText('An error occurred')
+                setSnackOpen(true)
+            })
         }).catch(() => {
             setSnackSev('error')
             setSnackText('An error occurred')
             setSnackOpen(true)
-        }).then(() => {
-            setLoadingTitle('Sending Cart')
-            setDisabledCartSend(true)
-            //SEND EMAIL
-        }).then(() => {
-            setOpenLoad(false)
-            setSnackSev('success')
-            setSnackText('Cart sent successfully. Thank you!')
-            setSnackOpen(true)
-            setCart([])
         })
     }
 
@@ -410,16 +402,16 @@ function Main() {
                         <Tooltip title='Click to Remove' arrow placement='top'>
                             <Box>
                                 {cart.map((option) => (
-                                        <ListItem disablePadding key={option.id} onClick={() => removeCartItem(option.id)}>
-                                            <ListItemButton>
-                                                <ListItemText>
-                                                    {option.title}
-                                                </ListItemText>
-                                                <ListItemIcon sx={{mr:-4}}>
-                                                    <DeleteIcon/>
-                                                </ListItemIcon>
-                                            </ListItemButton>
-                                        </ListItem>
+                                    <ListItem disablePadding key={option.id} onClick={() => removeCartItem(option.id)}>
+                                        <ListItemButton>
+                                            <ListItemText>
+                                                {option.title}
+                                            </ListItemText>
+                                            <ListItemIcon sx={{mr:-4}}>
+                                                <DeleteIcon/>
+                                            </ListItemIcon>
+                                        </ListItemButton>
+                                    </ListItem>
                                 ))}
                             </Box>
                         </Tooltip>

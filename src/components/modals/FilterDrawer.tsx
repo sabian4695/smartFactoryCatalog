@@ -9,7 +9,7 @@ import Select, {SelectChangeEvent} from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import {departmentOptions, orgOptions, statusOptions, typeOptions, unitOptions} from "../global/DropDowns";
 import FormControl from "@mui/material/FormControl";
-import {filterDrawerOpen, snackBarOpen, snackBarSeverity, snackBarText} from '../global/recoilMain'
+import {filterDrawerOpen, snackBarOpen, snackBarSeverity, snackBarText, userRole} from '../global/recoilMain'
 import {useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
 import TuneIcon from '@mui/icons-material/Tune';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -35,6 +35,7 @@ export default function FilterDrawer() {
     const setSnackOpen = useSetRecoilState(snackBarOpen);
     const catalogList = useRecoilValue(catalogListAtom)
     const [filtered, setFiltered] = useRecoilState(filteredCatalog)
+    const role = useRecoilValue(userRole)
     const handleDeptChange = (event: SelectChangeEvent) => {
         setDept(event.target.value as string);
     }
@@ -214,9 +215,15 @@ export default function FilterDrawer() {
                                     <MenuItem value="">
                                         <em>None</em>
                                     </MenuItem>
-                                    {departmentOptions.map((x) => (
-                                        <MenuItem value={x} key={x}>{x}</MenuItem>
-                                    ))}
+                                    {role === 'viewer' ?
+                                        departmentOptions.filter(y => y !== 'Admin').map((x) => (
+                                            <MenuItem value={x} key={x}>{x}</MenuItem>
+                                        ))
+                                        :
+                                        departmentOptions.map((x) => (
+                                            <MenuItem value={x} key={x}>{x}</MenuItem>
+                                        ))
+                                    }
                                 </Select>
                             </FormControl>
                         </ListItem>

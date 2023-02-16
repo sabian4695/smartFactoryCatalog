@@ -230,7 +230,7 @@ export default function EditCatalogItem() {
             setImage('')
             setImageCust(currentItemDetails.imgURL !== '' ? 'exists' : null)
             setWebLink(currentItemDetails.webLink)
-            setDisplayLink(currentItemDetails.displayLink)
+            setDisplayLink(currentItemDetails.displayLink === undefined ? '' : currentItemDetails.displayLink)
             setReportLink(currentItemDetails.reportLink)
             setDescription(currentItemDetails.description)
             setDetails(currentItemDetails.details)
