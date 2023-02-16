@@ -78,7 +78,7 @@ export const resizeImage = (base64Str, maxWidth , maxHeight ) => {
     })
 }
 
-let something = [
+let leftoverURLS = [
     {
         "appName": "GWH - Pass Thru No Repack",
         "department": [
