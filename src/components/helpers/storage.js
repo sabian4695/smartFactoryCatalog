@@ -8,6 +8,3 @@ export const getDataInt = key => {
     const intData = strData != null ? parseInt(strData, 10) : null;
     return intData != null && !isNaN(intData) ? intData : null;
 };
-
-export const storeSessionData = (key, data) => sessionStorage.setItem(`${STORAGE_KEY_PREFIX}${key}`, data);
-export const getSessionData = (key) => sessionStorage.getItem(`${STORAGE_KEY_PREFIX}${key}`);

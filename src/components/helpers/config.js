@@ -1,3 +1,5 @@
+// noinspection SpellCheckingInspection
+
 export const ENVIRONMENT_TYPE = 'DEVELOPMENT';
 //export const ENVIRONMENT_TYPE = 'PRODUCTION';
 export const APP_API_KEY = 'iBunUbdJVm8EEQrw2gntT9uqS3F2sji4tgxfDzfj';

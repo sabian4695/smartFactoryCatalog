@@ -1,5 +1,5 @@
 import {atom} from 'recoil'
-import {getDataString, getSessionData} from "../helpers/storage";
+import {getDataString} from "../helpers/storage";
 
 export interface itemType {
     recordId: string,
@@ -53,11 +53,6 @@ export const filteredCatalog = atom({
 });
 
 let defaultImgData: imgItem[] = []
-let localImg = getSessionData('imgData')
-if (localImg !== null && localImg !== undefined) {
-    //@ts-ignore
-    defaultImgData = JSON.parse(localImg)
-}
 
 
 export const imgData = atom({

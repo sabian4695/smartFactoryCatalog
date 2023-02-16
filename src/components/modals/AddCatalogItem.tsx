@@ -1,3 +1,5 @@
+// noinspection SpellCheckingInspection
+
 import React from 'react'
 import DialogTitle from "@mui/material/DialogTitle";
 import IconButton from "@mui/material/IconButton";

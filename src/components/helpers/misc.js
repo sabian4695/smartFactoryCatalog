@@ -1,3 +1,5 @@
+// noinspection SpellCheckingInspection
+
 import * as CONFIG from './config';
 import {deleteData, storeData} from './storage';
 import {lastActivityAtom} from '../global/recoilMain';
@@ -75,29 +77,6 @@ export const resizeImage = (base64Str, maxWidth , maxHeight ) => {
         }
     })
 }
-
-let need = [
-
-]
-
-let dontneed = [
-    {
-        "appName": "Shipping Order Progress Screen - SLB",
-        "department": [
-            "Logistics"
-        ],
-        "appUrl": "https://dck24nrq1je3f.cloudfront.net/da2-lqo3vmv5cjhenbcoun2nqavanm/30030&7351A",
-        "orgCode": [
-            "SLB"
-        ],
-        "description": "Toyota Skid Build Manifest Scanning Progress",
-        "type": [
-            "PI",
-            "Status"
-        ]
-    },
-
-]
 
 let something = [
     {
@@ -420,7 +399,7 @@ let something = [
         "orgCode": [
             "SLB"
         ],
-        "description": "ENGINGEERING black screen for SLB",
+        "description": "ENGINEERING black screen for SLB",
         "type": [
             "PI",
             "Black Screen"

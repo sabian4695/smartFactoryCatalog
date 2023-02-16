@@ -1,3 +1,5 @@
+// noinspection SpellCheckingInspection
+
 import React from 'react';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
@@ -34,7 +36,7 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Button from "@mui/material/Button";
 import {cartItems, catalogListAtom, filteredCatalog, imgData, imgItem} from './global/recoilTyped'
-import {getAppRoles, getCatalogItems, getUploadUrl, getURLs, getUserInfo, sendEmail} from "./helpers/api";
+import {getAppRoles, getCatalogItems, getUploadUrl, getUserInfo, sendEmail} from "./helpers/api";
 import {ListItem, ListItemButton} from "@mui/material";
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {deleteData, getDataString, storeData} from "./helpers/storage";

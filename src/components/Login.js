@@ -10,11 +10,10 @@ import {
     loggedInUserAtom, themeMode,
     loadingTitle,
     loadingOpen,
-    userRole
 } from './global/recoilMain';
 import {getDataString, getDataInt, deleteData} from './helpers/storage';
 import {useRecoilState, useSetRecoilState} from 'recoil';
-import {getAppRoles, login, refreshLogin} from './helpers/api';
+import {login, refreshLogin} from './helpers/api';
 import {timeToLogout} from './helpers/misc';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
@@ -223,7 +222,7 @@ const Login = () => {
             setAttempts(attempts+1)
             console.error('login error ->', e);
             setErrorText('Error: ' + e.response.data.message + '. Please try again.')
-            if (attempts > 2) {
+            if (attempts > 1) {
                 setErrorText('Please contact smart factory team for help')
             }
         } finally {
