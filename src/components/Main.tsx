@@ -361,7 +361,7 @@ function Main() {
                         </Toolbar>
                     </AppBar>
                 </Box>
-                <Box component="main" sx={{p: 3}}>
+                <Box component="main" sx={{p: 3, pb: 10}}>
                     <Toolbar/>
                     <Catalog/>
                 </Box>
@@ -378,6 +378,7 @@ function Main() {
                 }}
                 open={openMenu}
                 onClose={() => {setAnchorEl(null)}}
+                elevation={3}
                 PaperProps={{
                     style: {
                         maxHeight: 500,
